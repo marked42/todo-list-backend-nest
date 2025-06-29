@@ -2,22 +2,20 @@ import { Module } from '@nestjs/common';
 import { CoreModule } from './core/CoreModule';
 import { TodoModule } from './todo/TodoModule';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './core/entity/User';
+import { TypeOrmConfigService } from './TypeOrmConfigService';
+import { ConfigModule } from '@nestjs/config';
+import database from './config/database';
 
 @Module({
   imports: [
     CoreModule,
     TodoModule,
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: 'root1234',
-      database: 'todolist',
-      // autoLoadEntities: true,
-      entities: [User],
-      synchronize: true,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [database],
+    }),
+    TypeOrmModule.forRootAsync({
+      useClass: TypeOrmConfigService,
     }),
   ],
   controllers: [],
