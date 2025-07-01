@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { TokenCreateRequest } from '../dto/TokenCreateRequest';
 import { UserService } from './UserService';
 import * as bcrypt from 'bcrypt';
@@ -14,6 +18,10 @@ export class AuthService {
   async createToken(request: TokenCreateRequest) {
     // 1. 查看用户是否存在
     const user = await this.userService.findByUserName(request.username);
+
+    if (!user) {
+      throw new NotFoundException(`用户${request.username}不存在`);
+    }
 
     // 2. 用户密码是否有效
     const matched = await bcrypt.compare(

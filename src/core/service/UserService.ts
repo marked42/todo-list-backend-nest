@@ -14,17 +14,12 @@ export class UserService {
   ) {}
 
   async findByUserName(username: string) {
-    const user = await this.userRepository.findOneBy({
+    return this.userRepository.findOneBy({
       username,
     });
-    if (!user) {
-      throw new NotFoundException(`用户${username}不存在`);
-    }
-    return user;
   }
 
   async create(userCreateRequest: UserCreateRequest) {
-    // TODO:
     const existed = await this.findByUserName(userCreateRequest.username);
 
     if (existed) {
