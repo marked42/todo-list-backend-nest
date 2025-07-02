@@ -11,8 +11,8 @@ import { jwtConstants } from './const/user';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './guard/AuthGuard';
 import { HttpExceptionFilter } from './filter/HttpExceptionFilter';
-import { Task } from './entity/Task';
-import { TaskList } from './entity/TaskList';
+import { Task } from '../todo/entity/Task';
+import { TaskList } from '../todo/entity/TaskList';
 
 @Global()
 @Module({
