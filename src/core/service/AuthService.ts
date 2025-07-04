@@ -36,7 +36,7 @@ export class AuthService {
     // 3. 生成并返回token
     const payload = {
       sub: user.id,
-      username: user.username,
+      username: user.name,
     };
 
     return this.jwtService.signAsync(payload);

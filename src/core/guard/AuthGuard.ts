@@ -7,6 +7,7 @@ import {
 import { Request } from 'express';
 import { TOKEN_PREFIX } from '../const/user';
 import { JwtService } from '@nestjs/jwt';
+import { RequestUser } from '../entity/User';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -30,7 +31,12 @@ export class AuthGuard implements CanActivate {
         sub: number;
         username: string;
       }>(token);
-      request['user'] = { id: payload.sub, username: payload.username };
+
+      const requestUser = new RequestUser();
+      requestUser.id = payload.sub;
+      requestUser.name = payload.username;
+      request['user'] = requestUser;
+
       console.log('payload: ', payload);
     } catch (e: any) {
       console.log('error: ', e);

@@ -1,4 +1,4 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { User } from '../entity/User';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,7 +15,7 @@ export class UserService {
 
   async findByUserName(username: string) {
     return this.userRepository.findOneBy({
-      username,
+      name: username,
     });
   }
 
@@ -27,7 +27,7 @@ export class UserService {
     }
 
     const user = new User();
-    user.username = userCreateRequest.username;
+    user.name = userCreateRequest.username;
 
     const salt = await bcrypt.genSalt(10);
     user.encryptedPassword = await bcrypt.hash(
@@ -36,7 +36,6 @@ export class UserService {
     );
 
     const saved = await this.userRepository.save(user);
-    console.log('saved: ', saved);
     return saved;
   }
 }

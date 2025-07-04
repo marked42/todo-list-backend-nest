@@ -21,6 +21,26 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
+## Stories
+
+1. 用户
+   1. 登录操作
+   1. 扫码登录
+   1. 登出
+1. 列表操作
+   1. 新建列表 post task-list
+   1. 删除列表 delete task-list/:id
+   1. 修改列表信息（名称）
+   1. 查询用户所有列表 get task-list query?user=1
+      1. 查询支持筛选，名称、时间
+      1. 查询支持过滤，名称、时间
+1. 列表任务
+   1. 新增任务 post task-list/:id task
+   1. 删除任务 delete task-list/:id/tasks/:taskId TODO: 这里API路径需要task-list么？
+   1. 修改任务，名称、内容、状态（TODO、DOING、DONE） patch tasks/:id
+   1. 任务排序 post tasks/:id order字段
+   1. 查询列表下所有任务 tasks query?
+
 ## Description
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.

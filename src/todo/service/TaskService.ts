@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TaskList } from '../entity/TaskList';
 import { Repository } from 'typeorm';
@@ -10,10 +9,7 @@ export class TaskService {
     @InjectRepository(TaskList) private taskListRepo: Repository<TaskList>,
   ) {}
 
-  async createTaskList(request: TaskListCreateRequest) {
-    const taskList = new TaskList();
-    taskList.name = request.name;
-
+  async createTaskList(taskList: TaskList) {
     return this.taskListRepo.save(taskList);
   }
 }

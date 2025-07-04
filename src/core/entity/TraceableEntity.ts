@@ -4,7 +4,7 @@ import { BaseEntity } from './BaseEntity';
 
 @Entity()
 export class TraceableEntity extends BaseEntity {
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: false })
   @JoinColumn({ name: 'created_by_user_id' }) // 自定义外键字段名
   createdBy: User;
 

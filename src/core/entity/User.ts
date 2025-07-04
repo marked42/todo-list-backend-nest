@@ -7,7 +7,7 @@ export class User extends BaseEntity {
   @Column({
     unique: true,
   })
-  username: string;
+  name: string;
 
   @OneToMany(() => Role, (role: Role) => role.code)
   @JoinTable({
@@ -30,4 +30,9 @@ export class User extends BaseEntity {
     default: true,
   })
   enabled: boolean;
+}
+
+export class RequestUser {
+  id: number;
+  name: string;
 }
