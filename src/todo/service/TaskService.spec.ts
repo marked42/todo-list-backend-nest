@@ -6,7 +6,6 @@ import { TaskList } from '../entity/TaskList';
 import { User } from 'src/core/entity/User';
 import { Task } from '../entity/Task';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
-import { NotFoundException } from '@nestjs/common';
 
 describe('TaskService', () => {
   let service: TaskService;
