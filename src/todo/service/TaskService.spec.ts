@@ -33,39 +33,43 @@ describe('TaskService', () => {
     jest.clearAllMocks();
   });
 
-  it('should create a task list', async () => {
-    const taskList = { id: 1, name: 'Test List' } as TaskList;
+  describe('createTaskList', () => {
+    it('should create a task list', async () => {
+      const taskList = { id: 1, name: 'Test List' } as TaskList;
 
-    const save = jest.spyOn(repository, 'save').mockResolvedValue(taskList);
+      const save = jest.spyOn(repository, 'save').mockResolvedValue(taskList);
 
-    const result = await service.createTaskList(taskList);
+      const result = await service.createTaskList(taskList);
 
-    expect(save).toHaveBeenCalledWith(taskList);
-    expect(result).toEqual(taskList);
+      expect(save).toHaveBeenCalledWith(taskList);
+      expect(result).toEqual(taskList);
+    });
   });
 
-  it('should delete a task list', async () => {
-    const taskListId = 1;
-    const deleteResult = { affected: 1, raw: {} };
+  describe('deleteTaskList', () => {
+    it('should delete a task list', async () => {
+      const taskListId = 1;
+      const deleteResult = { affected: 1, raw: {} };
 
-    const repoDelete = jest
-      .spyOn(repository, 'delete')
-      .mockResolvedValue(deleteResult);
+      const repoDelete = jest
+        .spyOn(repository, 'delete')
+        .mockResolvedValue(deleteResult);
 
-    await service.deleteTaskList(taskListId);
+      await service.deleteTaskList(taskListId);
 
-    expect(repoDelete).toHaveBeenCalledWith(taskListId);
-  });
+      expect(repoDelete).toHaveBeenCalledWith(taskListId);
+    });
 
-  it('should throw NotFoundException when deleting a non-existent task list', async () => {
-    const taskListId = 1;
-    const deleteResult = { affected: 0, raw: {} };
+    it('should throw NotFoundException when deleting a non-existent task list', async () => {
+      const taskListId = 1;
+      const deleteResult = { affected: 0, raw: {} };
 
-    jest.spyOn(repository, 'delete').mockResolvedValue(deleteResult);
+      jest.spyOn(repository, 'delete').mockResolvedValue(deleteResult);
 
-    await expect(service.deleteTaskList(taskListId)).rejects.toThrow(
-      `Task list with ID ${taskListId} not found`,
-    );
+      await expect(service.deleteTaskList(taskListId)).rejects.toThrow(
+        `Task list with ID ${taskListId} not found`,
+      );
+    });
   });
 
   describe('renameTaskList', () => {
