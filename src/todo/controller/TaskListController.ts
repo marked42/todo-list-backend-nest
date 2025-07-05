@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Param, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { TaskService } from '../service/TaskService';
 import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
 import { TaskList } from '../entity/TaskList';
@@ -25,12 +35,24 @@ export class TaskListController {
   }
 
   @Delete('/:id')
-  async deleteTaskList(@Param('id') id: number) {
-    console.log('Deleting task list with ID:', typeof id, id);
+  async deleteTaskList(@Param('id', ParseIntPipe) id: number) {
     await this.taskService.deleteTaskList(id);
     return {
       success: true,
       message: `Task list with ID ${id} deleted successfully`,
+    };
+  }
+
+  @Patch('/:id')
+  async renameTaskList(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('name') name: string,
+  ) {
+    const taskList = await this.taskService.renameTaskList(id, name);
+    return {
+      success: true,
+      message: `Task list with ID ${id} renamed successfully`,
+      data: taskList,
     };
   }
 }

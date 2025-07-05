@@ -12,6 +12,7 @@ describe('TaskService', () => {
     const repoMock = {
       save: jest.fn(),
       delete: jest.fn(),
+      findOneBy: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -65,5 +66,37 @@ describe('TaskService', () => {
     await expect(service.deleteTaskList(taskListId)).rejects.toThrow(
       `Task list with ID ${taskListId} not found`,
     );
+  });
+
+  describe('renameTaskList', () => {
+    it('should rename a task list', async () => {
+      const taskListId = 1;
+      const oldName = 'Old List';
+      const newName = 'New List';
+      const oldTaskList = { id: taskListId, name: oldName } as TaskList;
+      const newTaskList = { id: taskListId, name: newName } as TaskList;
+
+      // 注意这里mock返回值应该是拷贝副本，否则在 save方法中oldTaskList.name 会被修改
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue({ ...oldTaskList });
+      const save = jest
+        .spyOn(repository, 'save')
+        .mockResolvedValue(newTaskList);
+
+      const result = await service.renameTaskList(taskListId, newName);
+
+      expect(save).toHaveBeenCalledWith({ ...oldTaskList, name: newName });
+      expect(result).toEqual(newTaskList);
+    });
+
+    it('should throw NotFoundException when renaming a non-existent task list', async () => {
+      const taskListId = 1;
+      const newName = 'Renamed List';
+
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+
+      await expect(service.renameTaskList(taskListId, newName)).rejects.toThrow(
+        `Task list with ID ${taskListId} not found`,
+      );
+    });
   });
 });

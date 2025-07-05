@@ -6,7 +6,14 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: false,
+      disableErrorMessages: false, // Set to false to enable detailed error messages
+    }),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('todolist example')

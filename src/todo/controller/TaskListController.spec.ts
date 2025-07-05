@@ -19,6 +19,7 @@ describe('TaskListController', () => {
           useValue: {
             createTaskList: jest.fn(),
             deleteTaskList: jest.fn(),
+            renameTaskList: jest.fn(),
           },
         },
       ],
@@ -101,6 +102,42 @@ describe('TaskListController', () => {
 
       await expect(controller.deleteTaskList(1)).rejects.toThrow(
         new NotFoundException('Task list with ID ${taskListId} not found'),
+      );
+    });
+  });
+
+  describe('renameTaskList', () => {
+    it('should rename task list', async () => {
+      const taskListId = 1;
+      const newName = 'Renamed Task List';
+      const mockTaskList = new TaskList();
+      mockTaskList.id = taskListId;
+      mockTaskList.name = newName;
+
+      const renameTaskList = jest
+        .spyOn(taskService, 'renameTaskList')
+        .mockResolvedValue(mockTaskList);
+
+      const result = await controller.renameTaskList(taskListId, newName);
+
+      expect(renameTaskList).toHaveBeenCalledWith(taskListId, newName);
+      expect(result).toEqual({
+        success: true,
+        message: `Task list with ID ${taskListId} renamed successfully`,
+        data: mockTaskList,
+      });
+    });
+
+    it('throw error 404 when renaming non-exist task list', async () => {
+      const taskListId = 1;
+      jest
+        .spyOn(taskService, 'renameTaskList')
+        .mockRejectedValue(
+          new NotFoundException(`Task list with ID ${taskListId} not found`),
+        );
+
+      await expect(controller.renameTaskList(1, 'New Name')).rejects.toThrow(
+        new NotFoundException(`Task list with ID ${taskListId} not found`),
       );
     });
   });

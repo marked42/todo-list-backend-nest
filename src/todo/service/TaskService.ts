@@ -19,4 +19,13 @@ export class TaskService {
       throw new NotFoundException(`Task list with ID ${id} not found`);
     }
   }
+
+  async renameTaskList(id: number, name: string): Promise<TaskList> {
+    const taskList = await this.taskListRepo.findOneBy({ id });
+    if (!taskList) {
+      throw new NotFoundException(`Task list with ID ${id} not found`);
+    }
+    taskList.name = name;
+    return this.taskListRepo.save(taskList);
+  }
 }
