@@ -38,6 +38,7 @@
 1. 列表任务
    1. 新增任务 post task-list/:id task
    1. 删除任务 delete task-list/:id/tasks/:taskId TODO: 这里API路径需要task-list么？
+   1. TODO: 写操作只能操作用户自己有权限的内容，读操作肯能可以读其他人的，这里 RBAC 角色控制权限
    1. 修改任务，名称、内容、状态（TODO、DOING、DONE） patch tasks/:id
    1. 任务排序 post tasks/:id order字段
    1. 查询列表下所有任务 tasks query?

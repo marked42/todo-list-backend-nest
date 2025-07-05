@@ -33,6 +33,7 @@ export class TaskController {
   async deleteTask(
     @Query('id', new ParseIntPipe({ optional: false })) id: number,
   ) {
+    // TODO: 只能删除自己的任务
     await this.taskService.deleteTask(id);
 
     return {
