@@ -28,9 +28,10 @@
    1. 扫码登录
    1. 登出
 1. 列表操作
-   1. 新建列表 post task-list
-   1. 删除列表 delete task-list/:id
-   1. 修改列表信息（名称）
+   1. done 新建列表 post task-list
+   1. done 删除列表 delete task-list/:id
+   1. done 修改列表信息（名称）
+   1. 列表有状态 active, inprogress, done
    1. 查询用户所有列表 get task-list query?user=1
       1. 查询支持筛选，名称、时间
       1. 查询支持过滤，名称、时间
