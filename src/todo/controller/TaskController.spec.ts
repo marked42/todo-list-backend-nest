@@ -3,6 +3,7 @@ import { TaskController } from './TaskController';
 import { TaskService } from '../service/TaskService';
 import { Task } from '../entity/Task';
 import { User } from 'src/core/entity/User';
+import { NotFoundException } from '@nestjs/common';
 
 describe('TaskController', () => {
   let controller: TaskController;
@@ -67,6 +68,37 @@ describe('TaskController', () => {
         mockRequest.user.id,
       );
       expect(result).toEqual(mockTask);
+    });
+  });
+
+  describe('deleteTask', () => {
+    it('should delete a task', async () => {
+      const taskId = 1;
+
+      const deleteTaskSpy = jest
+        .spyOn(taskService, 'deleteTask')
+        .mockResolvedValue();
+
+      const result = await controller.deleteTask(taskId);
+      expect(deleteTaskSpy).toHaveBeenCalledWith(taskId);
+      expect(result).toEqual({
+        success: true,
+        message: `Task with ID ${taskId} deleted successfully`,
+      });
+    });
+
+    it('should throw NotFoundException if task does not exist', async () => {
+      const taskId = -1;
+
+      jest
+        .spyOn(taskService, 'deleteTask')
+        .mockRejectedValue(
+          new NotFoundException(`Task with ID ${taskId} not found`),
+        );
+
+      await expect(controller.deleteTask(taskId)).rejects.toThrow(
+        `Task with ID ${taskId} not found`,
+      );
     });
   });
 });

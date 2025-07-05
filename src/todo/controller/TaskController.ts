@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   ParseIntPipe,
   Post,
@@ -26,5 +27,17 @@ export class TaskController {
     const currentUser = req['user'] as RequestUser;
 
     return this.taskService.createTask(request, currentUser.id);
+  }
+
+  @Delete('/:id')
+  async deleteTask(
+    @Query('id', new ParseIntPipe({ optional: false })) id: number,
+  ) {
+    await this.taskService.deleteTask(id);
+
+    return {
+      success: true,
+      message: `Task with ID ${id} deleted successfully`,
+    };
   }
 }
