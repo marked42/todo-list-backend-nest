@@ -5,6 +5,7 @@ import { TaskList } from '../entity/TaskList';
 import { User } from 'src/core/entity/User';
 import { Request } from 'express';
 import { NotFoundException } from '@nestjs/common';
+import { get } from 'http';
 
 describe('TaskListController', () => {
   let controller: TaskListController;
@@ -20,6 +21,7 @@ describe('TaskListController', () => {
             createTaskList: jest.fn(),
             deleteTaskList: jest.fn(),
             renameTaskList: jest.fn(),
+            getTaskLists: jest.fn(),
           },
         },
       ],
@@ -31,6 +33,21 @@ describe('TaskListController', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('getTaskLists', () => {
+    it('should return task lists for a given userId', async () => {
+      const mockUserId = 1;
+      const mockTaskLists = [new TaskList(), new TaskList()];
+
+      const getTaskLists = jest
+        .spyOn(taskService, 'getTaskLists')
+        .mockResolvedValue(mockTaskLists);
+
+      const result = await controller.getTaskLists(mockUserId);
+      expect(getTaskLists).toHaveBeenCalledWith(mockUserId);
+      expect(result).toEqual(mockTaskLists);
+    });
   });
 
   describe('createTaskList', () => {

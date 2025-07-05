@@ -9,6 +9,14 @@ export class TaskService {
     @InjectRepository(TaskList) private taskListRepo: Repository<TaskList>,
   ) {}
 
+  async getTaskLists(userId?: number): Promise<TaskList[]> {
+    const result = await this.taskListRepo.find({
+      where: { createdBy: { id: userId } },
+      relations: ['createdBy'],
+    });
+    return result;
+  }
+
   async createTaskList(taskList: TaskList) {
     return this.taskListRepo.save(taskList);
   }

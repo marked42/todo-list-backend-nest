@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
+  Get,
   Param,
   ParseIntPipe,
   Patch,
@@ -18,6 +20,13 @@ import { Request } from 'express';
 @Controller('/task-list')
 export class TaskListController {
   constructor(private taskService: TaskService) {}
+
+  @Get()
+  getTaskLists(
+    @Query('userId', new ParseIntPipe({ optional: true })) userId?: number,
+  ) {
+    return this.taskService.getTaskLists(userId);
+  }
 
   @Post()
   createTaskList(@Body() request: TaskListCreateRequest, @Req() req: Request) {
@@ -43,7 +52,7 @@ export class TaskListController {
     };
   }
 
-  @Patch('/:id')
+  @Patch('/:id/rename')
   async renameTaskList(
     @Param('id', ParseIntPipe) id: number,
     @Query('name') name: string,
