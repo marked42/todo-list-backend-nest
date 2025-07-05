@@ -17,7 +17,7 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
 
     // 白名单
-    if (['/tokens'].includes(request.url)) {
+    if (['/tokens', '/users'].includes(request.url)) {
       return true;
     }
 

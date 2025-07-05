@@ -11,6 +11,7 @@ describe('TaskService', () => {
   beforeEach(async () => {
     const repoMock = {
       save: jest.fn(),
+      delete: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -40,5 +41,29 @@ describe('TaskService', () => {
 
     expect(save).toHaveBeenCalledWith(taskList);
     expect(result).toEqual(taskList);
+  });
+
+  it('should delete a task list', async () => {
+    const taskListId = 1;
+    const deleteResult = { affected: 1, raw: {} };
+
+    const repoDelete = jest
+      .spyOn(repository, 'delete')
+      .mockResolvedValue(deleteResult);
+
+    await service.deleteTaskList(taskListId);
+
+    expect(repoDelete).toHaveBeenCalledWith(taskListId);
+  });
+
+  it('should throw NotFoundException when deleting a non-existent task list', async () => {
+    const taskListId = 1;
+    const deleteResult = { affected: 0, raw: {} };
+
+    jest.spyOn(repository, 'delete').mockResolvedValue(deleteResult);
+
+    await expect(service.deleteTaskList(taskListId)).rejects.toThrow(
+      `Task list with ID ${taskListId} not found`,
+    );
   });
 });

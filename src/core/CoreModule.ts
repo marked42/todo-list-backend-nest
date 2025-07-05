@@ -21,7 +21,7 @@ import { TaskList } from '../todo/entity/TaskList';
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,
-      signOptions: { expiresIn: '3000s' },
+      signOptions: { expiresIn: '3000000000' },
     }),
   ],
   controllers: [UserController, TokenController],
