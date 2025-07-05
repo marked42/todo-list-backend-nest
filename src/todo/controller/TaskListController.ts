@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  DefaultValuePipe,
   Delete,
   Get,
   Param,
@@ -17,7 +16,7 @@ import { TaskList } from '../entity/TaskList';
 import { RequestUser, User } from '../../core/entity/User';
 import { Request } from 'express';
 
-@Controller('/task-list')
+@Controller('/task-lists')
 export class TaskListController {
   constructor(private taskService: TaskService) {}
 

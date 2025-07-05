@@ -8,6 +8,9 @@ export class Task extends TraceableEntity {
   @Column()
   name: string;
 
+  @Column({ default: '' })
+  content: string;
+
   @Column({
     type: 'enum',
     enum: TaskStatus,

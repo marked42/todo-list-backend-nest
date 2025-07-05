@@ -4,17 +4,30 @@ import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { TaskList } from '../entity/TaskList';
 import { User } from 'src/core/entity/User';
+import { Task } from '../entity/Task';
+import { TaskCreateRequest } from '../dto/TaskCreateRequest';
+import { NotFoundException } from '@nestjs/common';
 
 describe('TaskService', () => {
   let service: TaskService;
-  let repository: Repository<TaskList>;
+  let taskListRepo: Repository<TaskList>;
+  let taskRepo: Repository<Task>;
 
   beforeEach(async () => {
-    const repoMock = {
+    // TODO: need a mock util
+    const taskListRepoMock = {
       save: jest.fn(),
       delete: jest.fn(),
       findOneBy: jest.fn(),
       find: jest.fn(),
+    };
+
+    const taskRepoMock = {
+      save: jest.fn(),
+      delete: jest.fn(),
+      findOneBy: jest.fn(),
+      find: jest.fn(),
+      create: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -22,13 +35,20 @@ describe('TaskService', () => {
         TaskService,
         {
           provide: getRepositoryToken(TaskList),
-          useValue: repoMock,
+          useValue: taskListRepoMock,
+        },
+        {
+          provide: getRepositoryToken(Task),
+          useValue: taskRepoMock,
         },
       ],
     }).compile();
 
     service = module.get<TaskService>(TaskService);
-    repository = module.get<Repository<TaskList>>(getRepositoryToken(TaskList));
+    taskListRepo = module.get<Repository<TaskList>>(
+      getRepositoryToken(TaskList),
+    );
+    taskRepo = module.get<Repository<Task>>(getRepositoryToken(Task));
   });
 
   afterEach(() => {
@@ -39,7 +59,7 @@ describe('TaskService', () => {
     it('should return an all task list if no userId is provided', async () => {
       const allTaskLists = [] as TaskList[];
       const find = jest
-        .spyOn(repository, 'find')
+        .spyOn(taskListRepo, 'find')
         .mockResolvedValue(allTaskLists);
 
       const result = await service.getTaskLists();
@@ -61,7 +81,7 @@ describe('TaskService', () => {
       const mockTaskLists = [task1, task2];
 
       const getTaskLists = jest
-        .spyOn(repository, 'find')
+        .spyOn(taskListRepo, 'find')
         .mockImplementation(() => {
           return Promise.resolve(
             mockTaskLists.filter((task) => task.createdBy?.id === mockUserId),
@@ -81,7 +101,7 @@ describe('TaskService', () => {
     it('should create a task list', async () => {
       const taskList = { id: 1, name: 'Test List' } as TaskList;
 
-      const save = jest.spyOn(repository, 'save').mockResolvedValue(taskList);
+      const save = jest.spyOn(taskListRepo, 'save').mockResolvedValue(taskList);
 
       const result = await service.createTaskList(taskList);
 
@@ -96,7 +116,7 @@ describe('TaskService', () => {
       const deleteResult = { affected: 1, raw: {} };
 
       const repoDelete = jest
-        .spyOn(repository, 'delete')
+        .spyOn(taskListRepo, 'delete')
         .mockResolvedValue(deleteResult);
 
       await service.deleteTaskList(taskListId);
@@ -108,7 +128,7 @@ describe('TaskService', () => {
       const taskListId = 1;
       const deleteResult = { affected: 0, raw: {} };
 
-      jest.spyOn(repository, 'delete').mockResolvedValue(deleteResult);
+      jest.spyOn(taskListRepo, 'delete').mockResolvedValue(deleteResult);
 
       await expect(service.deleteTaskList(taskListId)).rejects.toThrow(
         `Task list with ID ${taskListId} not found`,
@@ -125,9 +145,11 @@ describe('TaskService', () => {
       const newTaskList = { id: taskListId, name: newName } as TaskList;
 
       // 注意这里mock返回值应该是拷贝副本，否则在 save方法中oldTaskList.name 会被修改
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue({ ...oldTaskList });
+      jest
+        .spyOn(taskListRepo, 'findOneBy')
+        .mockResolvedValue({ ...oldTaskList });
       const save = jest
-        .spyOn(repository, 'save')
+        .spyOn(taskListRepo, 'save')
         .mockResolvedValue(newTaskList);
 
       const result = await service.renameTaskList(taskListId, newName);
@@ -140,10 +162,54 @@ describe('TaskService', () => {
       const taskListId = 1;
       const newName = 'Renamed List';
 
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+      jest.spyOn(taskListRepo, 'findOneBy').mockResolvedValue(null);
 
       await expect(service.renameTaskList(taskListId, newName)).rejects.toThrow(
         `Task list with ID ${taskListId} not found`,
+      );
+    });
+  });
+
+  describe('createTask', () => {
+    it('should create a task', async () => {
+      const taskListId = 1;
+      const request = { name: 'New Task' } as TaskCreateRequest;
+      const userId = 3;
+      const task = {
+        id: 1,
+        name: request.name,
+        taskList: { id: taskListId },
+        createdBy: { id: userId } as User,
+      } as Task;
+
+      jest
+        .spyOn(taskListRepo, 'findOneBy')
+        .mockResolvedValue({ id: taskListId } as TaskList);
+      const create = jest.spyOn(taskRepo, 'create').mockReturnValue(task);
+      const save = jest.spyOn(taskRepo, 'save').mockResolvedValue(task);
+
+      const result = await service.createTask(taskListId, request, userId);
+
+      expect(create).toHaveBeenCalledWith({
+        name: request.name,
+        taskList: { id: taskListId } as TaskList,
+        createdBy: { id: userId } as User,
+      });
+      expect(save).toHaveBeenCalledWith(task);
+      expect(result).toEqual(task);
+    });
+
+    it('should throw NotFoundException when creating a task for a non-existent task list', async () => {
+      const taskListId = 1;
+      const userId = 3;
+      const request = { name: 'New Task' } as TaskCreateRequest;
+
+      jest.spyOn(taskListRepo, 'findOneBy').mockResolvedValue(null);
+
+      await expect(
+        service.createTask(taskListId, request, userId),
+      ).rejects.toThrow(
+        `Task list with ID ${taskListId} not found, cannot create task`,
       );
     });
   });
