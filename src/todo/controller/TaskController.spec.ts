@@ -32,9 +32,11 @@ describe('TaskController', () => {
 
   describe('createTask', () => {
     it('should create a task', async () => {
+      const taskListId = 1;
       const mockTaskCreateRequest = {
         name: 'New Task',
         content: '',
+        taskListId,
       };
 
       const mockRequest = {
@@ -43,20 +45,22 @@ describe('TaskController', () => {
         } as User,
       } as unknown as Request & { user: User };
 
-      const taskListId = 1;
-      const mockTask = { id: 1, ...mockTaskCreateRequest } as Task;
+      const mockTask = {
+        id: 1,
+        name: mockTaskCreateRequest.name,
+        content: mockTaskCreateRequest.content,
+        taskList: { id: taskListId },
+      } as Task;
 
       const createTaskSpy = jest
         .spyOn(controller, 'createTask')
         .mockResolvedValue(mockTask);
 
       const result = await controller.createTask(
-        taskListId,
         mockTaskCreateRequest,
         mockRequest,
       );
       expect(createTaskSpy).toHaveBeenCalledWith(
-        taskListId,
         mockTaskCreateRequest,
         mockRequest,
       );

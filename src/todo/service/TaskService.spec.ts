@@ -172,7 +172,7 @@ describe('TaskService', () => {
   describe('createTask', () => {
     it('should create a task', async () => {
       const taskListId = 1;
-      const request = { name: 'New Task' } as TaskCreateRequest;
+      const request = { name: 'New Task', taskListId } as TaskCreateRequest;
       const userId = 3;
       const task = {
         id: 1,
@@ -187,7 +187,7 @@ describe('TaskService', () => {
       const create = jest.spyOn(taskRepo, 'create').mockReturnValue(task);
       const save = jest.spyOn(taskRepo, 'save').mockResolvedValue(task);
 
-      const result = await service.createTask(taskListId, request, userId);
+      const result = await service.createTask(request, userId);
 
       expect(create).toHaveBeenCalledWith({
         name: request.name,
@@ -201,13 +201,11 @@ describe('TaskService', () => {
     it('should throw NotFoundException when creating a task for a non-existent task list', async () => {
       const taskListId = 1;
       const userId = 3;
-      const request = { name: 'New Task' } as TaskCreateRequest;
+      const request = { name: 'New Task', taskListId } as TaskCreateRequest;
 
       jest.spyOn(taskListRepo, 'findOneBy').mockResolvedValue(null);
 
-      await expect(
-        service.createTask(taskListId, request, userId),
-      ).rejects.toThrow(
+      await expect(service.createTask(request, userId)).rejects.toThrow(
         `Task list with ID ${taskListId} not found, cannot create task`,
       );
     });

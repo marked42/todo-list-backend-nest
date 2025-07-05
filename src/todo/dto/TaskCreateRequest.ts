@@ -11,4 +11,9 @@ export class TaskCreateRequest {
     message: '任务名称不能超过20个字符',
   })
   name: string;
+
+  @IsNotEmpty({
+    message: '任务列表ID不能为空',
+  })
+  taskListId: number;
 }

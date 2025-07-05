@@ -42,15 +42,13 @@ export class TaskService {
     return this.taskListRepo.save(taskList);
   }
 
-  async createTask(
-    taskListId: number,
-    request: TaskCreateRequest,
-    userId: number,
-  ) {
-    const taskList = await this.taskListRepo.findOneBy({ id: taskListId });
+  async createTask(request: TaskCreateRequest, userId: number) {
+    const taskList = await this.taskListRepo.findOneBy({
+      id: request.taskListId,
+    });
     if (!taskList) {
       throw new NotFoundException(
-        `Task list with ID ${taskListId} not found, cannot create task`,
+        `Task list with ID ${request.taskListId} not found, cannot create task`,
       );
     }
 
