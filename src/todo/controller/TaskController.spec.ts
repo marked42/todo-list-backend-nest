@@ -6,6 +6,7 @@ import { User } from 'src/core/entity/User';
 
 describe('TaskController', () => {
   let controller: TaskController;
+  let taskService: TaskService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -24,6 +25,7 @@ describe('TaskController', () => {
     }).compile();
 
     controller = module.get<TaskController>(TaskController);
+    taskService = module.get<TaskService>(TaskService);
   });
 
   afterEach(() => {
@@ -53,7 +55,7 @@ describe('TaskController', () => {
       } as Task;
 
       const createTaskSpy = jest
-        .spyOn(controller, 'createTask')
+        .spyOn(taskService, 'createTask')
         .mockResolvedValue(mockTask);
 
       const result = await controller.createTask(
@@ -62,7 +64,7 @@ describe('TaskController', () => {
       );
       expect(createTaskSpy).toHaveBeenCalledWith(
         mockTaskCreateRequest,
-        mockRequest,
+        mockRequest.user.id,
       );
       expect(result).toEqual(mockTask);
     });
