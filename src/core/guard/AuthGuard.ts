@@ -36,10 +36,7 @@ export class AuthGuard implements CanActivate {
       requestUser.id = payload.sub;
       requestUser.name = payload.username;
       request['user'] = requestUser;
-
-      console.log('payload: ', payload);
     } catch (e: any) {
-      console.log('error: ', e);
       throw new UnauthorizedException(`未授权 ${e}`);
     }
 
