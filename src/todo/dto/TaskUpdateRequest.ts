@@ -24,8 +24,4 @@ export class TaskUpdateRequest {
     message: '状态必须是 Todo、Doing 或 Done',
   })
   status?: TaskStatus;
-
-  @IsOptional()
-  @IsNumber()
-  taskListId?: number; // Optional, if the task can be moved to a different list
 }
