@@ -27,7 +27,6 @@ export class TaskService {
   }
 
   async createTaskList(taskList: TaskList) {
-    // TODO: createdBy 字段表示的userId 是否合法由数据库隐式校验，是否应该在这里显式校验
     return this.taskListRepo.save(taskList);
   }
 

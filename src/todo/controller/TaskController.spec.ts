@@ -19,6 +19,7 @@ describe('TaskController', () => {
             deleteTask: jest.fn(),
             renameTask: jest.fn(),
             getTasksByListId: jest.fn(),
+            updateTask: jest.fn(),
           },
         },
       ],
@@ -107,6 +108,62 @@ describe('TaskController', () => {
       await expect(controller.deleteTask(taskId, userId)).rejects.toThrow(
         `Task with ID ${taskId} not owned by user ${userId}`,
       );
+    });
+  });
+
+  describe('updateTask', () => {
+    it('should update a task', async () => {
+      const taskId = 1;
+      const userId = 2;
+      const updateData = { name: 'Updated Task' };
+
+      const updateTaskSpy = jest
+        .spyOn(taskService, 'updateTask')
+        .mockResolvedValue({
+          id: taskId,
+          ...updateData,
+        } as Task);
+
+      const result = await controller.updateTask(taskId, userId, updateData);
+      expect(updateTaskSpy).toHaveBeenCalledWith(taskId, userId, updateData);
+      expect(result).toEqual({
+        success: true,
+        message: `Task with ID ${taskId} renamed successfully`,
+      });
+    });
+
+    it('should throw NotFoundException if task does not exist', async () => {
+      const taskId = -1;
+      const userId = 2;
+      const updateData = { name: 'Updated Task' };
+
+      jest
+        .spyOn(taskService, 'updateTask')
+        .mockRejectedValue(
+          new NotFoundException(`Task with ID ${taskId} not found`),
+        );
+
+      await expect(
+        controller.updateTask(taskId, userId, updateData),
+      ).rejects.toThrow(`Task with ID ${taskId} not found`);
+    });
+
+    it('should throw ForbiddenException if task does not belong to user', async () => {
+      const taskId = 1;
+      const userId = 2;
+      const updateData = { name: 'Updated Task' };
+
+      jest
+        .spyOn(taskService, 'updateTask')
+        .mockRejectedValue(
+          new ForbiddenException(
+            `Task with ID ${taskId} not owned by user ${userId}`,
+          ),
+        );
+
+      await expect(
+        controller.updateTask(taskId, userId, updateData),
+      ).rejects.toThrow(`Task with ID ${taskId} not owned by user ${userId}`);
     });
   });
 });

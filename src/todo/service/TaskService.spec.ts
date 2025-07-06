@@ -6,6 +6,7 @@ import { User } from '@/core/entity/User';
 import { TaskList } from '../entity/TaskList';
 import { Task } from '../entity/Task';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
+import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 
 describe('TaskService', () => {
   let service: TaskService;
@@ -312,6 +313,59 @@ describe('TaskService', () => {
         await expect(service.deleteTask(taskId, userId)).rejects.toThrow(
           `Task with ID ${taskId} not owned by user ${userId}`,
         );
+      });
+    });
+
+    describe('updateTask', () => {
+      it('should update a task', async () => {
+        const taskId = 1;
+        const userId = 2;
+        const updateData = {
+          name: 'Updated Task',
+          content: 'Updated content',
+        } as TaskUpdateRequest;
+        const oldTask = {
+          id: taskId,
+          name: 'Old Task',
+          createdBy: { id: userId },
+        } as Task;
+        const updatedTask = { ...oldTask, ...updateData } as Task;
+
+        jest.spyOn(taskRepo, 'findOne').mockResolvedValue(oldTask);
+        const save = jest
+          .spyOn(taskRepo, 'save')
+          .mockResolvedValue(updatedTask);
+
+        const result = await service.updateTask(taskId, userId, updateData);
+
+        expect(save).toHaveBeenCalledWith({ ...oldTask, ...updateData });
+        expect(result).toEqual(updatedTask);
+      });
+
+      it('should throw NotFoundException when updating a non-existent task', async () => {
+        const taskId = 1;
+        const userId = 2;
+        const updateData = { name: 'Updated Task' } as TaskUpdateRequest;
+
+        jest.spyOn(taskRepo, 'findOne').mockResolvedValue(null);
+
+        await expect(
+          service.updateTask(taskId, userId, updateData),
+        ).rejects.toThrow(`Task with ID ${taskId} not found`);
+      });
+
+      it('should throw ForbiddenException when updating a task not owned by user', async () => {
+        const taskId = 1;
+        const userId = 2;
+        const updateData = { name: 'Updated Task' } as TaskUpdateRequest;
+
+        jest
+          .spyOn(taskRepo, 'findOne')
+          .mockResolvedValue({ id: taskId, createdBy: { id: 3 } } as Task);
+
+        await expect(
+          service.updateTask(taskId, userId, updateData),
+        ).rejects.toThrow(`Task with ID ${taskId} not owned by user ${userId}`);
       });
     });
   });
