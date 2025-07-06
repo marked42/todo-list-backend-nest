@@ -224,6 +224,50 @@ describe('TaskService', () => {
   });
 
   describe('task', () => {
+    describe('getTasks', () => {
+      it('should return all tasks for a given user and task list', async () => {
+        const user1Id = 1;
+        const user2Id = 2;
+        const taskListId = 2;
+        const tasks = [
+          {
+            id: 1,
+            name: 'Task 1',
+            createdBy: { id: user1Id },
+            taskList: { id: taskListId },
+          },
+          {
+            id: 2,
+            name: 'Task 2',
+            createdBy: { id: user2Id },
+            taskList: { id: taskListId },
+          },
+        ] as Task[];
+        const find = jest.spyOn(taskRepo, 'find').mockResolvedValue(tasks);
+        const result = await service.getTasks(user1Id, taskListId);
+        expect(find).toHaveBeenCalledWith({
+          where: { createdBy: { id: user1Id }, taskList: { id: taskListId } },
+          relations: ['taskList'],
+        });
+        expect(result).toEqual(tasks);
+      });
+
+      it('should return all tasks for a given user without task list filter', async () => {
+        const userId = 1;
+        const tasks = [
+          { id: 1, name: 'Task 1', taskList: { id: 2 } },
+          { id: 2, name: 'Task 2', taskList: { id: 3 } },
+        ] as Task[];
+        const find = jest.spyOn(taskRepo, 'find').mockResolvedValue(tasks);
+        const result = await service.getTasks(userId);
+        expect(find).toHaveBeenCalledWith({
+          where: { createdBy: { id: userId }, taskList: { id: undefined } },
+          relations: ['taskList'],
+        });
+        expect(result).toEqual(tasks);
+      });
+    });
+
     describe('createTask', () => {
       it('should create a task', async () => {
         const taskListId = 1;

@@ -74,6 +74,15 @@ export class TaskService {
     return taskList;
   }
 
+  // TODO: validate userId exist in db
+  async getTasks(userId?: number, taskListId?: number): Promise<Task[]> {
+    const tasks = await this.taskRepo.find({
+      where: { createdBy: { id: userId }, taskList: { id: taskListId } },
+      relations: ['taskList'],
+    });
+    return tasks;
+  }
+
   async createTask(request: TaskCreateRequest, userId: number) {
     const taskList = await this.findTaskListOrThrow(request.taskListId);
 

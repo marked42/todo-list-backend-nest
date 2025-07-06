@@ -18,13 +18,21 @@ import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
-  @Get()
   helloTask() {
     return 'helloTask';
   }
 
+  @Get()
+  async getTasks(
+    @CurrentUser('id') userId: number,
+    @Query('taskListId', new ParseIntPipe({ optional: true }))
+    taskListId?: number,
+  ) {
+    return this.taskService.getTasks(userId, taskListId);
+  }
+
   @Post()
-  createTask(
+  async createTask(
     @Body() request: TaskCreateRequest,
     @CurrentUser('id') userId: number,
   ) {
