@@ -1,0 +1,31 @@
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { TaskStatus } from '../enum/TaskStatus';
+
+export class TaskUpdateRequest {
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty({
+    message: '名称不能为空',
+  })
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  content?: string;
+
+  @IsOptional()
+  @IsEnum(TaskStatus, {
+    message: '状态必须是 Todo、Doing 或 Done',
+  })
+  status?: TaskStatus;
+
+  @IsOptional()
+  @IsNumber()
+  taskListId?: number; // Optional, if the task can be moved to a different list
+}

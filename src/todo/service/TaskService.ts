@@ -9,6 +9,7 @@ import { User } from '@/core/entity/User';
 import { TaskList } from '../entity/TaskList';
 import { Task } from '../entity/Task';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
+import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 
 @Injectable()
 export class TaskService {
@@ -89,6 +90,19 @@ export class TaskService {
     await this.validateTask(taskId, userId);
 
     return this.taskRepo.delete(taskId);
+  }
+
+  async updateTask(
+    taskId: number,
+    userId: number,
+    updateData: TaskUpdateRequest,
+  ): Promise<Task> {
+    const task = await this.validateTask(taskId, userId);
+
+    // Update only the fields that are provided in updateData
+    Object.assign(task, updateData);
+
+    return this.taskRepo.save(task);
   }
 
   private async findTaskOrThrow(taskId: number): Promise<Task> {
