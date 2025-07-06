@@ -33,10 +33,7 @@ export class TaskService {
   async deleteTaskList(taskListId: number, userId: number) {
     await this.validateTaskList(taskListId, userId);
 
-    const result = await this.taskListRepo.delete(taskListId);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Task list with ID ${taskListId} not found`);
-    }
+    return this.taskListRepo.delete(taskListId);
   }
 
   async renameTaskList(id: number, name: string): Promise<TaskList> {
@@ -87,10 +84,7 @@ export class TaskService {
   async deleteTask(taskId: number, userId: number) {
     await this.validateTask(taskId, userId);
 
-    const result = await this.taskRepo.delete(taskId);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Task with ID ${taskId} not found`);
-    }
+    return this.taskRepo.delete(taskId);
   }
 
   private async findTaskOrThrow(taskId: number): Promise<Task> {
