@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TaskList } from '../entity/TaskList';
@@ -26,10 +30,21 @@ export class TaskService {
     return this.taskListRepo.save(taskList);
   }
 
-  async deleteTaskList(id: number) {
-    const result = await this.taskListRepo.delete(id);
+  async deleteTaskList(taskListId: number, userId: number) {
+    const taskList = await this.taskListRepo.findOneBy({ id: taskListId });
+    if (!taskList) {
+      throw new NotFoundException(`Task list with ID ${taskListId} not found`);
+    }
+
+    if (taskList.createdBy.id !== userId) {
+      throw new ForbiddenException(
+        `Task list with ID ${taskListId} not owned by user ${userId}`,
+      );
+    }
+
+    const result = await this.taskListRepo.delete(taskListId);
     if (result.affected === 0) {
-      throw new NotFoundException(`Task list with ID ${id} not found`);
+      throw new NotFoundException(`Task list with ID ${taskListId} not found`);
     }
   }
 
@@ -61,10 +76,21 @@ export class TaskService {
     return this.taskRepo.save(task);
   }
 
-  async deleteTask(id: number) {
-    const result = await this.taskRepo.delete(id);
+  async deleteTask(taskId: number, userId: number) {
+    const task = await this.taskRepo.findOneBy({ id: taskId });
+    if (!task) {
+      throw new NotFoundException(`Task with ID ${taskId} not found`);
+    }
+
+    if (task.createdBy.id !== userId) {
+      throw new ForbiddenException(
+        `Task with ID ${taskId} not owned by user ${userId}`,
+      );
+    }
+
+    const result = await this.taskRepo.delete(taskId);
     if (result.affected === 0) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
+      throw new NotFoundException(`Task with ID ${taskId} not found`);
     }
   }
 }

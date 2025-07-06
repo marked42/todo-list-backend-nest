@@ -3,7 +3,7 @@ import { TaskService } from '../service/TaskService';
 import { TaskListController } from './TaskListController';
 import { TaskList } from '../entity/TaskList';
 import { User } from '@/core/entity/User';
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
 describe('TaskListController', () => {
   let controller: TaskListController;
@@ -90,28 +90,53 @@ describe('TaskListController', () => {
   describe('deleteTaskList', () => {
     it('should delete task list', async () => {
       const taskListId = 1;
+      const userId = 2;
       const deleteTaskList = jest
         .spyOn(taskService, 'deleteTaskList')
         .mockResolvedValue();
 
-      const result = await controller.deleteTaskList(taskListId);
+      const result = await controller.deleteTaskList(taskListId, userId);
 
-      expect(deleteTaskList).toHaveBeenCalledWith(taskListId);
+      expect(deleteTaskList).toHaveBeenCalledWith(taskListId, userId);
       expect(result).toEqual({
         success: true,
         message: `Task list with ID ${taskListId} deleted successfully`,
       });
     });
 
-    it('throw error 404 when deleting non-exist task list', async () => {
+    it('should throw error 404 when deleting non-exist task list', async () => {
+      const taskListId = 1;
+      const userId = 2;
+
       jest
         .spyOn(taskService, 'deleteTaskList')
         .mockRejectedValue(
-          new NotFoundException('Task list with ID ${taskListId} not found'),
+          new NotFoundException(`Task list with ID ${taskListId} not found`),
         );
 
-      await expect(controller.deleteTaskList(1)).rejects.toThrow(
-        new NotFoundException('Task list with ID ${taskListId} not found'),
+      await expect(controller.deleteTaskList(1, userId)).rejects.toThrow(
+        new NotFoundException(`Task list with ID ${taskListId} not found`),
+      );
+    });
+
+    it('should throw error 403 when deleting task list not owned by user', async () => {
+      const taskListId = 1;
+      const userId = 2;
+
+      jest
+        .spyOn(taskService, 'deleteTaskList')
+        .mockRejectedValue(
+          new ForbiddenException(
+            `Task list with ID ${taskListId} not owned by user ${userId}`,
+          ),
+        );
+
+      await expect(
+        controller.deleteTaskList(taskListId, userId),
+      ).rejects.toThrow(
+        new ForbiddenException(
+          `Task list with ID ${taskListId} not owned by user ${userId}`,
+        ),
       );
     });
   });

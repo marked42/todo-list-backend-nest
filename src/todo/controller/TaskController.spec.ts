@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { TaskController } from './TaskController';
 import { TaskService } from '../service/TaskService';
 import { Task } from '../entity/Task';
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
 describe('TaskController', () => {
   let controller: TaskController;
@@ -63,13 +63,14 @@ describe('TaskController', () => {
   describe('deleteTask', () => {
     it('should delete a task', async () => {
       const taskId = 1;
+      const userId = 2;
 
       const deleteTaskSpy = jest
         .spyOn(taskService, 'deleteTask')
         .mockResolvedValue();
 
-      const result = await controller.deleteTask(taskId);
-      expect(deleteTaskSpy).toHaveBeenCalledWith(taskId);
+      const result = await controller.deleteTask(taskId, userId);
+      expect(deleteTaskSpy).toHaveBeenCalledWith(taskId, userId);
       expect(result).toEqual({
         success: true,
         message: `Task with ID ${taskId} deleted successfully`,
@@ -78,6 +79,7 @@ describe('TaskController', () => {
 
     it('should throw NotFoundException if task does not exist', async () => {
       const taskId = -1;
+      const userId = 2;
 
       jest
         .spyOn(taskService, 'deleteTask')
@@ -85,8 +87,25 @@ describe('TaskController', () => {
           new NotFoundException(`Task with ID ${taskId} not found`),
         );
 
-      await expect(controller.deleteTask(taskId)).rejects.toThrow(
+      await expect(controller.deleteTask(taskId, userId)).rejects.toThrow(
         `Task with ID ${taskId} not found`,
+      );
+    });
+
+    it('should throw ForbiddenException if task does not belong to user', async () => {
+      const taskId = 1;
+      const userId = 2;
+
+      jest
+        .spyOn(taskService, 'deleteTask')
+        .mockRejectedValue(
+          new ForbiddenException(
+            `Task with ID ${taskId} not owned by user ${userId}`,
+          ),
+        );
+
+      await expect(controller.deleteTask(taskId, userId)).rejects.toThrow(
+        `Task with ID ${taskId} not owned by user ${userId}`,
       );
     });
   });

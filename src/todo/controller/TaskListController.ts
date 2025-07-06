@@ -43,8 +43,11 @@ export class TaskListController {
   }
 
   @Delete('/:id')
-  async deleteTaskList(@Param('id', ParseIntPipe) id: number) {
-    await this.taskService.deleteTaskList(id);
+  async deleteTaskList(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    await this.taskService.deleteTaskList(id, userId);
     return {
       success: true,
       message: `Task list with ID ${id} deleted successfully`,
