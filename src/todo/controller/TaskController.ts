@@ -56,4 +56,30 @@ export class TaskController {
       message: `Task with ID ${taskId} renamed successfully`,
     };
   }
+
+  @Patch('/:id/move')
+  async moveToAnotherTaskList(
+    @Param('id', new ParseIntPipe({ optional: false })) taskId: number,
+    @Query('taskListId', new ParseIntPipe({ optional: false }))
+    taskListId: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    const moved = await this.taskService.moveToAnotherTaskList(
+      taskId,
+      taskListId,
+      userId,
+    );
+
+    if (!moved) {
+      return {
+        success: true,
+        message: `Task with ID ${taskId} is already in task list ${taskListId}`,
+      };
+    }
+
+    return {
+      success: true,
+      message: `Task with ID ${taskId} moved to task list ${taskListId} successfully`,
+    };
+  }
 }

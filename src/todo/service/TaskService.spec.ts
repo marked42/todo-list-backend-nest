@@ -18,7 +18,6 @@ describe('TaskService', () => {
     const taskListRepoMock = {
       save: jest.fn(),
       delete: jest.fn(),
-      findOneBy: jest.fn(),
       findOne: jest.fn(),
       find: jest.fn(),
     };
@@ -26,7 +25,6 @@ describe('TaskService', () => {
     const taskRepoMock = {
       save: jest.fn(),
       delete: jest.fn(),
-      findOneBy: jest.fn(),
       findOne: jest.fn(),
       find: jest.fn(),
       create: jest.fn(),
@@ -68,6 +66,7 @@ describe('TaskService', () => {
         const result = await service.getTaskLists();
         expect(find).toHaveBeenCalledWith({
           where: { createdBy: { userId: undefined } },
+          // TODO: remove all relations options in test
           relations: ['createdBy'],
         });
 
@@ -121,12 +120,10 @@ describe('TaskService', () => {
         const userId = 2;
         const deleteResult = { affected: 1, raw: {} };
 
-        const findOneBy = jest
-          .spyOn(taskListRepo, 'findOneBy')
-          .mockResolvedValue({
-            id: taskListId,
-            createdBy: { id: userId },
-          } as TaskList);
+        const findOne = jest.spyOn(taskListRepo, 'findOne').mockResolvedValue({
+          id: taskListId,
+          createdBy: { id: userId },
+        } as TaskList);
 
         const repoDelete = jest
           .spyOn(taskListRepo, 'delete')
@@ -134,7 +131,10 @@ describe('TaskService', () => {
 
         await service.deleteTaskList(taskListId, userId);
 
-        expect(findOneBy).toHaveBeenCalledWith({ id: taskListId });
+        expect(findOne).toHaveBeenCalledWith({
+          where: { id: taskListId },
+          relations: ['createdBy'],
+        });
         expect(repoDelete).toHaveBeenCalledWith(taskListId);
       });
 
@@ -143,8 +143,8 @@ describe('TaskService', () => {
         const userId = 2;
         const deleteResult = { affected: 0, raw: {} };
 
-        const findOneBy = jest
-          .spyOn(taskListRepo, 'findOneBy')
+        const findOne = jest
+          .spyOn(taskListRepo, 'findOne')
           .mockResolvedValue(null);
         const taskListRepoDelete = jest
           .spyOn(taskListRepo, 'delete')
@@ -153,7 +153,10 @@ describe('TaskService', () => {
         await expect(
           service.deleteTaskList(taskListId, userId),
         ).rejects.toThrow(`Task list with ID ${taskListId} not found`);
-        expect(findOneBy).toHaveBeenCalledWith({ id: taskListId });
+        expect(findOne).toHaveBeenCalledWith({
+          where: { id: taskListId },
+          relations: ['createdBy'],
+        });
         expect(taskListRepoDelete).not.toHaveBeenCalled();
       });
     });
@@ -173,7 +176,7 @@ describe('TaskService', () => {
 
         // 注意这里mock返回值应该是拷贝副本，否则在 save方法中oldTaskList.name 会被修改
         jest
-          .spyOn(taskListRepo, 'findOneBy')
+          .spyOn(taskListRepo, 'findOne')
           .mockResolvedValue({ ...oldTaskList });
         const save = jest
           .spyOn(taskListRepo, 'save')
@@ -194,7 +197,7 @@ describe('TaskService', () => {
         const userId = 2;
         const newName = 'Renamed List';
 
-        jest.spyOn(taskListRepo, 'findOneBy').mockResolvedValue(null);
+        jest.spyOn(taskListRepo, 'findOne').mockResolvedValue(null);
 
         await expect(
           service.renameTaskList(taskListId, userId, newName),
@@ -206,7 +209,7 @@ describe('TaskService', () => {
         const userId = 2;
         const newName = 'Renamed List';
 
-        jest.spyOn(taskListRepo, 'findOneBy').mockResolvedValue({
+        jest.spyOn(taskListRepo, 'findOne').mockResolvedValue({
           id: taskListId,
           createdBy: { id: 3 },
         } as TaskList);
@@ -234,7 +237,7 @@ describe('TaskService', () => {
         } as Task;
 
         jest
-          .spyOn(taskListRepo, 'findOneBy')
+          .spyOn(taskListRepo, 'findOne')
           .mockResolvedValue({ id: taskListId } as TaskList);
         const create = jest.spyOn(taskRepo, 'create').mockReturnValue(task);
         const save = jest.spyOn(taskRepo, 'save').mockResolvedValue(task);
@@ -255,10 +258,10 @@ describe('TaskService', () => {
         const userId = 3;
         const request = { name: 'New Task', taskListId } as TaskCreateRequest;
 
-        jest.spyOn(taskListRepo, 'findOneBy').mockResolvedValue(null);
+        jest.spyOn(taskListRepo, 'findOne').mockResolvedValue(null);
 
         await expect(service.createTask(request, userId)).rejects.toThrow(
-          `Task list with ID ${taskListId} not found, cannot create task`,
+          `Task list with ID ${taskListId} not found`,
         );
       });
     });
@@ -366,6 +369,144 @@ describe('TaskService', () => {
         await expect(
           service.updateTask(taskId, userId, updateData),
         ).rejects.toThrow(`Task with ID ${taskId} not owned by user ${userId}`);
+      });
+    });
+
+    describe('move task to another task list', () => {
+      it('should move a task to another task list', async () => {
+        const taskId = 1;
+        const userId = 2;
+        const newTaskListId = 3;
+
+        const taskToMove = {
+          id: taskId,
+          name: 'Old Task',
+          taskList: { id: 1 },
+          createdBy: { id: userId },
+        } as Task;
+        const targetTaskList = {
+          id: newTaskListId,
+          createdBy: { id: userId },
+        } as TaskList;
+
+        jest.spyOn(taskRepo, 'findOne').mockResolvedValue(taskToMove);
+        jest.spyOn(taskListRepo, 'findOne').mockResolvedValue(targetTaskList);
+        const save = jest.spyOn(taskRepo, 'save').mockResolvedValue({
+          ...taskToMove,
+          taskList: targetTaskList,
+        });
+
+        const result = await service.moveToAnotherTaskList(
+          taskId,
+          newTaskListId,
+          userId,
+        );
+
+        expect(save).toHaveBeenCalledWith({
+          ...taskToMove,
+          taskList: targetTaskList,
+        });
+        expect(result).toEqual(true);
+      });
+
+      it('should not move a task if it is already in the target task list', async () => {
+        const taskId = 1;
+        const userId = 2;
+        const newTaskListId = 1; // Same as current task list id
+
+        const taskToMove = {
+          id: taskId,
+          name: 'Old Task',
+          taskList: { id: 1 },
+          createdBy: { id: userId },
+        } as Task;
+        const targetTaskList = {
+          id: newTaskListId,
+          createdBy: { id: userId },
+        } as TaskList;
+
+        jest.spyOn(taskRepo, 'findOne').mockResolvedValue(taskToMove);
+        jest.spyOn(taskListRepo, 'findOne').mockResolvedValue(targetTaskList);
+        const save = jest.spyOn(taskRepo, 'save').mockResolvedValue({
+          ...taskToMove,
+          taskList: targetTaskList,
+        });
+
+        const result = await service.moveToAnotherTaskList(
+          taskId,
+          newTaskListId,
+          userId,
+        );
+
+        expect(save).not.toHaveBeenCalled();
+        expect(result).toEqual(false);
+      });
+
+      it('should throw NotFoundException when moving a non-existent task', async () => {
+        const taskId = 1;
+        const userId = 2;
+        const newTaskListId = 3;
+
+        jest.spyOn(taskRepo, 'findOne').mockResolvedValue(null);
+
+        await expect(
+          service.moveToAnotherTaskList(taskId, newTaskListId, userId),
+        ).rejects.toThrow(`Task with ID ${taskId} not found`);
+      });
+
+      it('should throw ForbiddenException when moving a task not owned by user', async () => {
+        const taskId = 1;
+        const userId = 2;
+        const newTaskListId = 3;
+
+        jest.spyOn(taskRepo, 'findOne').mockResolvedValue({
+          id: taskId,
+          taskList: { id: 4 },
+          createdBy: { id: 3 },
+        } as Task);
+
+        await expect(
+          service.moveToAnotherTaskList(taskId, newTaskListId, userId),
+        ).rejects.toThrow(`Task with ID ${taskId} not owned by user ${userId}`);
+      });
+
+      it('should throw NotFoundException when moving to a non-existent task list', async () => {
+        const taskId = 1;
+        const userId = 2;
+        const newTaskListId = 3;
+
+        jest.spyOn(taskRepo, 'findOne').mockResolvedValue({
+          id: taskId,
+          taskList: { id: 1 },
+          createdBy: { id: userId },
+        } as Task);
+        jest.spyOn(taskListRepo, 'findOne').mockResolvedValue(null);
+
+        await expect(
+          service.moveToAnotherTaskList(taskId, newTaskListId, userId),
+        ).rejects.toThrow(`Task list with ID ${newTaskListId} not found`);
+      });
+
+      it('should throw ForbiddenException when moving to a task list not owned by user', async () => {
+        const taskId = 1;
+        const userId = 2;
+        const newTaskListId = 3;
+
+        jest.spyOn(taskRepo, 'findOne').mockResolvedValue({
+          id: taskId,
+          taskList: { id: 1 },
+          createdBy: { id: userId },
+        } as Task);
+        jest.spyOn(taskListRepo, 'findOne').mockResolvedValue({
+          id: newTaskListId,
+          createdBy: { id: 4 }, // Different user
+        } as TaskList);
+
+        await expect(
+          service.moveToAnotherTaskList(taskId, newTaskListId, userId),
+        ).rejects.toThrow(
+          `Task list with ID ${newTaskListId} not owned by user ${userId}`,
+        );
       });
     });
   });

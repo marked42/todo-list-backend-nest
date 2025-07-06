@@ -47,11 +47,12 @@ export class TaskService {
   }
 
   private async findTaskListOrThrow(taskListId: number): Promise<TaskList> {
-    const taskList = await this.taskListRepo.findOneBy({ id: taskListId });
+    const taskList = await this.taskListRepo.findOne({
+      where: { id: taskListId },
+      relations: ['createdBy'],
+    });
     if (!taskList) {
-      throw new NotFoundException(
-        `Task list with ID ${taskListId} not found, cannot create task`,
-      );
+      throw new NotFoundException(`Task list with ID ${taskListId} not found`);
     }
     return taskList;
   }
@@ -102,6 +103,25 @@ export class TaskService {
     Object.assign(task, updateData);
 
     return this.taskRepo.save(task);
+  }
+
+  async moveToAnotherTaskList(
+    taskId: number,
+    targetTaskListId: number,
+    userId: number,
+  ) {
+    const task = await this.validateTask(taskId, userId);
+    if (task.taskList.id === targetTaskListId) {
+      return false;
+    }
+    const targetTaskList = await this.validateTaskList(
+      targetTaskListId,
+      userId,
+    );
+
+    task.taskList = targetTaskList;
+    await this.taskRepo.save(task);
+    return true;
   }
 
   private async findTaskOrThrow(taskId: number): Promise<Task> {
