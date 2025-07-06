@@ -18,6 +18,7 @@ describe('TaskService', () => {
       save: jest.fn(),
       delete: jest.fn(),
       findOneBy: jest.fn(),
+      findOne: jest.fn(),
       find: jest.fn(),
     };
 
@@ -25,6 +26,7 @@ describe('TaskService', () => {
       save: jest.fn(),
       delete: jest.fn(),
       findOneBy: jest.fn(),
+      findOne: jest.fn(),
       find: jest.fn(),
       create: jest.fn(),
     };
@@ -239,8 +241,8 @@ describe('TaskService', () => {
         const userId = 2;
         const deleteResult = { affected: 1, raw: {} };
 
-        const findOneBy = jest
-          .spyOn(taskRepo, 'findOneBy')
+        const findOne = jest
+          .spyOn(taskRepo, 'findOne')
           .mockResolvedValue({ id: taskId, createdBy: { id: userId } } as Task);
 
         const repoDelete = jest
@@ -249,7 +251,13 @@ describe('TaskService', () => {
 
         await service.deleteTask(taskId, userId);
 
-        expect(findOneBy).toHaveBeenCalledWith({ id: taskId });
+        // TODO: 应该修改为使用 mock Repo 测试行为，而不是方法调用
+        expect(findOne).toHaveBeenCalledWith({
+          where: {
+            id: taskId,
+          },
+          relations: ['createdBy'],
+        });
         expect(repoDelete).toHaveBeenCalledWith(taskId);
       });
 
@@ -258,7 +266,7 @@ describe('TaskService', () => {
         const userId = 2;
         const deleteResult = { affected: 0, raw: {} };
 
-        jest.spyOn(taskRepo, 'findOneBy').mockResolvedValue(null);
+        jest.spyOn(taskRepo, 'findOne').mockResolvedValue(null);
         jest.spyOn(taskRepo, 'delete').mockResolvedValue(deleteResult);
 
         await expect(service.deleteTask(taskId, userId)).rejects.toThrow(
@@ -271,7 +279,7 @@ describe('TaskService', () => {
         const userId = 2;
 
         jest
-          .spyOn(taskRepo, 'findOneBy')
+          .spyOn(taskRepo, 'findOne')
           .mockResolvedValue({ id: taskId, createdBy: { id: 3 } } as Task);
 
         await expect(service.deleteTask(taskId, userId)).rejects.toThrow(

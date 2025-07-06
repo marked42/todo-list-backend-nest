@@ -30,17 +30,35 @@ export class TaskService {
     return this.taskListRepo.save(taskList);
   }
 
-  async deleteTaskList(taskListId: number, userId: number) {
+  private async findTaskListOrThrow(taskListId: number): Promise<TaskList> {
     const taskList = await this.taskListRepo.findOneBy({ id: taskListId });
     if (!taskList) {
-      throw new NotFoundException(`Task list with ID ${taskListId} not found`);
-    }
-
-    if (taskList.createdBy.id !== userId) {
-      throw new ForbiddenException(
-        `Task list with ID ${taskListId} not owned by user ${userId}`,
+      throw new NotFoundException(
+        `Task list with ID ${taskListId} not found, cannot create task`,
       );
     }
+    return taskList;
+  }
+
+  private assertTaskListOwnerOrThrow(taskList: TaskList, userId: number) {
+    if (taskList.createdBy.id !== userId) {
+      throw new ForbiddenException(
+        `Task list with ID ${taskList.id} not owned by user ${userId}`,
+      );
+    }
+  }
+
+  async validateTaskList(
+    taskListId: number,
+    userId: number,
+  ): Promise<TaskList> {
+    const taskList = await this.findTaskListOrThrow(taskListId);
+    this.assertTaskListOwnerOrThrow(taskList, userId);
+    return taskList;
+  }
+
+  async deleteTaskList(taskListId: number, userId: number) {
+    await this.validateTaskList(taskListId, userId);
 
     const result = await this.taskListRepo.delete(taskListId);
     if (result.affected === 0) {
@@ -49,23 +67,13 @@ export class TaskService {
   }
 
   async renameTaskList(id: number, name: string): Promise<TaskList> {
-    const taskList = await this.taskListRepo.findOneBy({ id });
-    if (!taskList) {
-      throw new NotFoundException(`Task list with ID ${id} not found`);
-    }
+    const taskList = await this.findTaskListOrThrow(id);
     taskList.name = name;
     return this.taskListRepo.save(taskList);
   }
 
   async createTask(request: TaskCreateRequest, userId: number) {
-    const taskList = await this.taskListRepo.findOneBy({
-      id: request.taskListId,
-    });
-    if (!taskList) {
-      throw new NotFoundException(
-        `Task list with ID ${request.taskListId} not found, cannot create task`,
-      );
-    }
+    const taskList = await this.findTaskListOrThrow(request.taskListId);
 
     const task = this.taskRepo.create({
       name: request.name,
@@ -76,17 +84,39 @@ export class TaskService {
     return this.taskRepo.save(task);
   }
 
-  async deleteTask(taskId: number, userId: number) {
-    const task = await this.taskRepo.findOneBy({ id: taskId });
+  private async findTaskOrThrow(taskId: number): Promise<Task> {
+    const task = await this.taskRepo.findOne({
+      where: { id: taskId },
+      relations: ['createdBy'],
+    });
     if (!task) {
       throw new NotFoundException(`Task with ID ${taskId} not found`);
     }
+    return task;
+  }
 
-    if (task.createdBy.id !== userId) {
-      throw new ForbiddenException(
-        `Task with ID ${taskId} not owned by user ${userId}`,
-      );
+  private assertTaskOwnerOrThrow(
+    entity: Task,
+    userId: number,
+    notOwnedMsg: string,
+  ) {
+    if (entity.createdBy.id !== userId) {
+      throw new ForbiddenException(notOwnedMsg);
     }
+  }
+
+  async validateTask(taskId: number, userId: number): Promise<Task> {
+    const task = await this.findTaskOrThrow(taskId);
+    this.assertTaskOwnerOrThrow(
+      task,
+      userId,
+      `Task with ID ${taskId} not owned by user ${userId}`,
+    );
+    return task;
+  }
+
+  async deleteTask(taskId: number, userId: number) {
+    await this.validateTask(taskId, userId);
 
     const result = await this.taskRepo.delete(taskId);
     if (result.affected === 0) {
