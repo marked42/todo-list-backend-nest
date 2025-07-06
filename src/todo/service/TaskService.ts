@@ -5,10 +5,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TaskList } from '../entity/TaskList';
-import { TaskCreateRequest } from '../dto/TaskCreateRequest';
-import { Task } from '../entity/Task';
 import { User } from '@/core/entity/User';
+import { TaskList } from '../entity/TaskList';
+import { Task } from '../entity/Task';
+import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 
 @Injectable()
 export class TaskService {
@@ -36,9 +36,13 @@ export class TaskService {
     return this.taskListRepo.delete(taskListId);
   }
 
-  async renameTaskList(id: number, name: string): Promise<TaskList> {
-    const taskList = await this.findTaskListOrThrow(id);
-    taskList.name = name;
+  async renameTaskList(
+    taskListId: number,
+    userId: number,
+    newName: string,
+  ): Promise<TaskList> {
+    const taskList = await this.validateTaskList(taskListId, userId);
+    taskList.name = newName;
     return this.taskListRepo.save(taskList);
   }
 

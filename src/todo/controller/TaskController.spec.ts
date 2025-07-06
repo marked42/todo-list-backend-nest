@@ -67,7 +67,7 @@ describe('TaskController', () => {
 
       const deleteTaskSpy = jest
         .spyOn(taskService, 'deleteTask')
-        .mockResolvedValue();
+        .mockResolvedValue({ affected: 1, raw: [] });
 
       const result = await controller.deleteTask(taskId, userId);
       expect(deleteTaskSpy).toHaveBeenCalledWith(taskId, userId);

@@ -57,9 +57,10 @@ export class TaskListController {
   @Patch('/:id/rename')
   async renameTaskList(
     @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('id') userId: number,
     @Query('name') name: string,
   ) {
-    const taskList = await this.taskService.renameTaskList(id, name);
+    const taskList = await this.taskService.renameTaskList(id, userId, name);
     return {
       success: true,
       message: `Task list with ID ${id} renamed successfully`,
