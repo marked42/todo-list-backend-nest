@@ -42,6 +42,7 @@
    1. 修改任务，名称、内容、状态（TODO、DOING、DONE） patch tasks/:id
    1. 任务排序 post tasks/:id order字段
    1. 查询列表下所有任务 tasks query?
+1. core module could be separated into user/auth modules
 
 ## Description
 
