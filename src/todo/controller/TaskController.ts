@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskService } from '../service/TaskService';
-import { CurrentUser } from '../../core/decorator/CurrentUser';
+import { CurrentUser } from '@/core/decorator/CurrentUser';
 
 @Controller('tasks')
 export class TaskController {

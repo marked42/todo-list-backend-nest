@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { CoreModule } from './core/CoreModule';
-import { TodoModule } from './todo/TodoModule';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TypeOrmConfigService } from './TypeOrmConfigService';
 import { ConfigModule } from '@nestjs/config';
-import database from './config/database';
+import database from '@/config/database';
+import { CoreModule } from '@/core/CoreModule';
+import { TodoModule } from '@/todo/TodoModule';
+import { TypeOrmConfigService } from './TypeOrmConfigService';
 
 @Module({
   imports: [

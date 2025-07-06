@@ -12,8 +12,8 @@ import {
 import { TaskService } from '../service/TaskService';
 import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
 import { TaskList } from '../entity/TaskList';
-import { User } from '../../core/entity/User';
-import { CurrentUser } from '../../core/decorator/CurrentUser';
+import { User } from '@/core/entity/User';
+import { CurrentUser } from '@/core/decorator/CurrentUser';
 
 @Controller('/task-lists')
 export class TaskListController {

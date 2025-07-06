@@ -2,7 +2,6 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { User } from '../entity/User';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ConfigService } from '@nestjs/config';
 import { UserCreateRequest } from '../dto/UserCreateRequest';
 import * as bcrypt from 'bcrypt';
 
@@ -10,7 +9,6 @@ import * as bcrypt from 'bcrypt';
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
-    private configService: ConfigService,
   ) {}
 
   async findByUserName(username: string) {

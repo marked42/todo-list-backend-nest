@@ -11,13 +11,11 @@ import { jwtConstants } from './const/user';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './guard/AuthGuard';
 import { HttpExceptionFilter } from './filter/HttpExceptionFilter';
-import { Task } from '../todo/entity/Task';
-import { TaskList } from '../todo/entity/TaskList';
 
 @Global()
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Role, Task, TaskList]),
+    TypeOrmModule.forFeature([User, Role]),
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,

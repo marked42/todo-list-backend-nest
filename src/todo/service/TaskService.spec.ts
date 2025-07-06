@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TaskService } from './TaskService';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from '@/core/entity/User';
 import { TaskList } from '../entity/TaskList';
-import { User } from 'src/core/entity/User';
 import { Task } from '../entity/Task';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 

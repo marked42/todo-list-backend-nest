@@ -1,6 +1,6 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 import { TaskListStatus } from '../enum/TaskListStatus';
-import { TraceableEntity } from '../../core/entity/TraceableEntity';
+import { TraceableEntity } from '@/core/entity/TraceableEntity';
 import { Task } from './Task';
 
 @Entity()

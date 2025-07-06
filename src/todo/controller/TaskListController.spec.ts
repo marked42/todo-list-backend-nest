@@ -2,8 +2,7 @@ import { Test } from '@nestjs/testing';
 import { TaskService } from '../service/TaskService';
 import { TaskListController } from './TaskListController';
 import { TaskList } from '../entity/TaskList';
-import { User } from 'src/core/entity/User';
-import { Request } from 'express';
+import { User } from '@/core/entity/User';
 import { NotFoundException } from '@nestjs/common';
 
 describe('TaskListController', () => {
