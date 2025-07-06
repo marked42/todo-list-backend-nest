@@ -51,11 +51,7 @@ describe('TaskListController', () => {
 
   describe('createTaskList', () => {
     it('should create task list', async () => {
-      const mockRequest = {
-        user: {
-          id: 2,
-        } as User,
-      } as unknown as Request & { user: User };
+      const userId = 2;
 
       const mockTaskListCreateRequest = {
         name: 'task-list-1',
@@ -63,32 +59,31 @@ describe('TaskListController', () => {
 
       const expectedTaskList = new TaskList();
       expectedTaskList.name = mockTaskListCreateRequest.name;
-      expectedTaskList.createdBy = mockRequest.user;
+      expectedTaskList.createdBy = { id: userId } as User;
 
       const createTaskList = jest
         .spyOn(taskService, 'createTaskList')
         .mockResolvedValue({
           ...expectedTaskList,
           id: 1,
-          createdBy: mockRequest.user,
         });
 
       const result = await controller.createTaskList(
         mockTaskListCreateRequest,
-        mockRequest,
+        userId,
       );
 
       // If your controller expects a plain object, not an instance, adjust the expectation accordingly
       expect(createTaskList).toHaveBeenCalledWith(
         expect.objectContaining({
           name: mockTaskListCreateRequest.name,
-          createdBy: mockRequest.user,
+          createdBy: { id: userId },
         }),
       );
       expect(result).toEqual({
         ...expectedTaskList,
         id: 1,
-        createdBy: mockRequest.user,
+        createdBy: { id: userId },
       });
     });
   });

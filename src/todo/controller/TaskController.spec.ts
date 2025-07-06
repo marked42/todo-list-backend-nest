@@ -42,11 +42,7 @@ describe('TaskController', () => {
         taskListId,
       };
 
-      const mockRequest = {
-        user: {
-          id: 2,
-        } as User,
-      } as unknown as Request & { user: User };
+      const userId = 2;
 
       const mockTask = {
         id: 1,
@@ -59,14 +55,8 @@ describe('TaskController', () => {
         .spyOn(taskService, 'createTask')
         .mockResolvedValue(mockTask);
 
-      const result = await controller.createTask(
-        mockTaskCreateRequest,
-        mockRequest,
-      );
-      expect(createTaskSpy).toHaveBeenCalledWith(
-        mockTaskCreateRequest,
-        mockRequest.user.id,
-      );
+      const result = await controller.createTask(mockTaskCreateRequest, userId);
+      expect(createTaskSpy).toHaveBeenCalledWith(mockTaskCreateRequest, userId);
       expect(result).toEqual(mockTask);
     });
   });

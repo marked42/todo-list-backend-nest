@@ -8,13 +8,12 @@ import {
   Patch,
   Post,
   Query,
-  Req,
 } from '@nestjs/common';
 import { TaskService } from '../service/TaskService';
 import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
 import { TaskList } from '../entity/TaskList';
-import { RequestUser, User } from '../../core/entity/User';
-import { Request } from 'express';
+import { User } from '../../core/entity/User';
+import { CurrentUser } from '../../core/decorator/CurrentUser';
 
 @Controller('/task-lists')
 export class TaskListController {
@@ -28,14 +27,15 @@ export class TaskListController {
   }
 
   @Post()
-  createTaskList(@Body() request: TaskListCreateRequest, @Req() req: Request) {
+  createTaskList(
+    @Body() request: TaskListCreateRequest,
+    @CurrentUser('id') userId: number,
+  ) {
     const taskList = new TaskList();
     taskList.name = request.name;
 
-    // TODO: extract as decorator
-    const currentUser = req['user'] as RequestUser;
     const user = new User();
-    user.id = currentUser.id;
+    user.id = userId;
 
     taskList.createdBy = user;
 

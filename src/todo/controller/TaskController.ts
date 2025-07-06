@@ -6,11 +6,10 @@ import {
   ParseIntPipe,
   Post,
   Query,
-  Req,
 } from '@nestjs/common';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskService } from '../service/TaskService';
-import { RequestUser } from 'src/core/entity/User';
+import { CurrentUser } from '../../core/decorator/CurrentUser';
 
 @Controller('tasks')
 export class TaskController {
@@ -22,11 +21,11 @@ export class TaskController {
   }
 
   @Post()
-  createTask(@Body() request: TaskCreateRequest, @Req() req: Request) {
-    // TODO: extract as decorator
-    const currentUser = req['user'] as RequestUser;
-
-    return this.taskService.createTask(request, currentUser.id);
+  createTask(
+    @Body() request: TaskCreateRequest,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.taskService.createTask(request, userId);
   }
 
   @Delete('/:id')
