@@ -18,10 +18,6 @@ import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
-  helloTask() {
-    return 'helloTask';
-  }
-
   @Get()
   async getTasks(
     @CurrentUser('id') userId: number,
