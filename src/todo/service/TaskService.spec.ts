@@ -54,224 +54,230 @@ describe('TaskService', () => {
     jest.clearAllMocks();
   });
 
-  describe('getTaskLists', () => {
-    it('should return an all task list if no userId is provided', async () => {
-      const allTaskLists = [] as TaskList[];
-      const find = jest
-        .spyOn(taskListRepo, 'find')
-        .mockResolvedValue(allTaskLists);
+  describe('task list', () => {
+    describe('getTaskLists', () => {
+      it('should return an all task list if no userId is provided', async () => {
+        const allTaskLists = [] as TaskList[];
+        const find = jest
+          .spyOn(taskListRepo, 'find')
+          .mockResolvedValue(allTaskLists);
 
-      const result = await service.getTaskLists();
-      expect(find).toHaveBeenCalledWith({
-        where: { createdBy: { userId: undefined } },
-        relations: ['createdBy'],
-      });
-
-      expect(result).toEqual(allTaskLists);
-    });
-
-    it('should return task lists for a given userId', async () => {
-      const mockUserId = 1;
-      const task1 = new TaskList();
-      task1.createdBy = { id: 1 } as User;
-      const task2 = new TaskList();
-      task2.createdBy = { id: 2 } as User;
-
-      const mockTaskLists = [task1, task2];
-
-      const getTaskLists = jest
-        .spyOn(taskListRepo, 'find')
-        .mockImplementation(() => {
-          return Promise.resolve(
-            mockTaskLists.filter((task) => task.createdBy?.id === mockUserId),
-          );
+        const result = await service.getTaskLists();
+        expect(find).toHaveBeenCalledWith({
+          where: { createdBy: { userId: undefined } },
+          relations: ['createdBy'],
         });
 
-      const result = await service.getTaskLists(mockUserId);
-      expect(getTaskLists).toHaveBeenCalledWith({
-        where: { createdBy: { id: mockUserId } },
-        relations: ['createdBy'],
+        expect(result).toEqual(allTaskLists);
       });
-      expect(result).toEqual([task1]);
-    });
-  });
 
-  describe('createTaskList', () => {
-    it('should create a task list', async () => {
-      const taskList = { id: 1, name: 'Test List' } as TaskList;
+      it('should return task lists for a given userId', async () => {
+        const mockUserId = 1;
+        const task1 = new TaskList();
+        task1.createdBy = { id: 1 } as User;
+        const task2 = new TaskList();
+        task2.createdBy = { id: 2 } as User;
 
-      const save = jest.spyOn(taskListRepo, 'save').mockResolvedValue(taskList);
+        const mockTaskLists = [task1, task2];
 
-      const result = await service.createTaskList(taskList);
+        const getTaskLists = jest
+          .spyOn(taskListRepo, 'find')
+          .mockImplementation(() => {
+            return Promise.resolve(
+              mockTaskLists.filter((task) => task.createdBy?.id === mockUserId),
+            );
+          });
 
-      expect(save).toHaveBeenCalledWith(taskList);
-      expect(result).toEqual(taskList);
-    });
-  });
-
-  describe('deleteTaskList', () => {
-    it('should delete a task list', async () => {
-      const taskListId = 1;
-      const userId = 2;
-      const deleteResult = { affected: 1, raw: {} };
-
-      const findOneBy = jest
-        .spyOn(taskListRepo, 'findOneBy')
-        .mockResolvedValue({
-          id: taskListId,
-          createdBy: { id: userId },
-        } as TaskList);
-
-      const repoDelete = jest
-        .spyOn(taskListRepo, 'delete')
-        .mockResolvedValue(deleteResult);
-
-      await service.deleteTaskList(taskListId, userId);
-
-      expect(findOneBy).toHaveBeenCalledWith({ id: taskListId });
-      expect(repoDelete).toHaveBeenCalledWith(taskListId);
-    });
-
-    it('should throw NotFoundException when deleting a non-existent task list', async () => {
-      const taskListId = 1;
-      const userId = 2;
-      const deleteResult = { affected: 0, raw: {} };
-
-      const findOneBy = jest
-        .spyOn(taskListRepo, 'findOneBy')
-        .mockResolvedValue(null);
-      const taskListRepoDelete = jest
-        .spyOn(taskListRepo, 'delete')
-        .mockResolvedValue(deleteResult);
-
-      await expect(service.deleteTaskList(taskListId, userId)).rejects.toThrow(
-        `Task list with ID ${taskListId} not found`,
-      );
-      expect(findOneBy).toHaveBeenCalledWith({ id: taskListId });
-      expect(taskListRepoDelete).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('renameTaskList', () => {
-    it('should rename a task list', async () => {
-      const taskListId = 1;
-      const oldName = 'Old List';
-      const newName = 'New List';
-      const oldTaskList = { id: taskListId, name: oldName } as TaskList;
-      const newTaskList = { id: taskListId, name: newName } as TaskList;
-
-      // 注意这里mock返回值应该是拷贝副本，否则在 save方法中oldTaskList.name 会被修改
-      jest
-        .spyOn(taskListRepo, 'findOneBy')
-        .mockResolvedValue({ ...oldTaskList });
-      const save = jest
-        .spyOn(taskListRepo, 'save')
-        .mockResolvedValue(newTaskList);
-
-      const result = await service.renameTaskList(taskListId, newName);
-
-      expect(save).toHaveBeenCalledWith({ ...oldTaskList, name: newName });
-      expect(result).toEqual(newTaskList);
-    });
-
-    it('should throw NotFoundException when renaming a non-existent task list', async () => {
-      const taskListId = 1;
-      const newName = 'Renamed List';
-
-      jest.spyOn(taskListRepo, 'findOneBy').mockResolvedValue(null);
-
-      await expect(service.renameTaskList(taskListId, newName)).rejects.toThrow(
-        `Task list with ID ${taskListId} not found`,
-      );
-    });
-  });
-
-  describe('createTask', () => {
-    it('should create a task', async () => {
-      const taskListId = 1;
-      const request = { name: 'New Task', taskListId } as TaskCreateRequest;
-      const userId = 3;
-      const task = {
-        id: 1,
-        name: request.name,
-        taskList: { id: taskListId },
-        createdBy: { id: userId } as User,
-      } as Task;
-
-      jest
-        .spyOn(taskListRepo, 'findOneBy')
-        .mockResolvedValue({ id: taskListId } as TaskList);
-      const create = jest.spyOn(taskRepo, 'create').mockReturnValue(task);
-      const save = jest.spyOn(taskRepo, 'save').mockResolvedValue(task);
-
-      const result = await service.createTask(request, userId);
-
-      expect(create).toHaveBeenCalledWith({
-        name: request.name,
-        taskList: { id: taskListId } as TaskList,
-        createdBy: { id: userId } as User,
+        const result = await service.getTaskLists(mockUserId);
+        expect(getTaskLists).toHaveBeenCalledWith({
+          where: { createdBy: { id: mockUserId } },
+          relations: ['createdBy'],
+        });
+        expect(result).toEqual([task1]);
       });
-      expect(save).toHaveBeenCalledWith(task);
-      expect(result).toEqual(task);
     });
 
-    it('should throw NotFoundException when creating a task for a non-existent task list', async () => {
-      const taskListId = 1;
-      const userId = 3;
-      const request = { name: 'New Task', taskListId } as TaskCreateRequest;
+    describe('createTaskList', () => {
+      it('should create a task list', async () => {
+        const taskList = { id: 1, name: 'Test List' } as TaskList;
 
-      jest.spyOn(taskListRepo, 'findOneBy').mockResolvedValue(null);
+        const save = jest
+          .spyOn(taskListRepo, 'save')
+          .mockResolvedValue(taskList);
 
-      await expect(service.createTask(request, userId)).rejects.toThrow(
-        `Task list with ID ${taskListId} not found, cannot create task`,
-      );
+        const result = await service.createTaskList(taskList);
+
+        expect(save).toHaveBeenCalledWith(taskList);
+        expect(result).toEqual(taskList);
+      });
+    });
+
+    describe('deleteTaskList', () => {
+      it('should delete a task list', async () => {
+        const taskListId = 1;
+        const userId = 2;
+        const deleteResult = { affected: 1, raw: {} };
+
+        const findOneBy = jest
+          .spyOn(taskListRepo, 'findOneBy')
+          .mockResolvedValue({
+            id: taskListId,
+            createdBy: { id: userId },
+          } as TaskList);
+
+        const repoDelete = jest
+          .spyOn(taskListRepo, 'delete')
+          .mockResolvedValue(deleteResult);
+
+        await service.deleteTaskList(taskListId, userId);
+
+        expect(findOneBy).toHaveBeenCalledWith({ id: taskListId });
+        expect(repoDelete).toHaveBeenCalledWith(taskListId);
+      });
+
+      it('should throw NotFoundException when deleting a non-existent task list', async () => {
+        const taskListId = 1;
+        const userId = 2;
+        const deleteResult = { affected: 0, raw: {} };
+
+        const findOneBy = jest
+          .spyOn(taskListRepo, 'findOneBy')
+          .mockResolvedValue(null);
+        const taskListRepoDelete = jest
+          .spyOn(taskListRepo, 'delete')
+          .mockResolvedValue(deleteResult);
+
+        await expect(
+          service.deleteTaskList(taskListId, userId),
+        ).rejects.toThrow(`Task list with ID ${taskListId} not found`);
+        expect(findOneBy).toHaveBeenCalledWith({ id: taskListId });
+        expect(taskListRepoDelete).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('renameTaskList', () => {
+      it('should rename a task list', async () => {
+        const taskListId = 1;
+        const oldName = 'Old List';
+        const newName = 'New List';
+        const oldTaskList = { id: taskListId, name: oldName } as TaskList;
+        const newTaskList = { id: taskListId, name: newName } as TaskList;
+
+        // 注意这里mock返回值应该是拷贝副本，否则在 save方法中oldTaskList.name 会被修改
+        jest
+          .spyOn(taskListRepo, 'findOneBy')
+          .mockResolvedValue({ ...oldTaskList });
+        const save = jest
+          .spyOn(taskListRepo, 'save')
+          .mockResolvedValue(newTaskList);
+
+        const result = await service.renameTaskList(taskListId, newName);
+
+        expect(save).toHaveBeenCalledWith({ ...oldTaskList, name: newName });
+        expect(result).toEqual(newTaskList);
+      });
+
+      it('should throw NotFoundException when renaming a non-existent task list', async () => {
+        const taskListId = 1;
+        const newName = 'Renamed List';
+
+        jest.spyOn(taskListRepo, 'findOneBy').mockResolvedValue(null);
+
+        await expect(
+          service.renameTaskList(taskListId, newName),
+        ).rejects.toThrow(`Task list with ID ${taskListId} not found`);
+      });
     });
   });
 
-  describe('deleteTask', () => {
-    it('should delete a task', async () => {
-      const taskId = 1;
-      const userId = 2;
-      const deleteResult = { affected: 1, raw: {} };
+  describe('task', () => {
+    describe('createTask', () => {
+      it('should create a task', async () => {
+        const taskListId = 1;
+        const request = { name: 'New Task', taskListId } as TaskCreateRequest;
+        const userId = 3;
+        const task = {
+          id: 1,
+          name: request.name,
+          taskList: { id: taskListId },
+          createdBy: { id: userId } as User,
+        } as Task;
 
-      const findOneBy = jest
-        .spyOn(taskRepo, 'findOneBy')
-        .mockResolvedValue({ id: taskId, createdBy: { id: userId } } as Task);
+        jest
+          .spyOn(taskListRepo, 'findOneBy')
+          .mockResolvedValue({ id: taskListId } as TaskList);
+        const create = jest.spyOn(taskRepo, 'create').mockReturnValue(task);
+        const save = jest.spyOn(taskRepo, 'save').mockResolvedValue(task);
 
-      const repoDelete = jest
-        .spyOn(taskRepo, 'delete')
-        .mockResolvedValue(deleteResult);
+        const result = await service.createTask(request, userId);
 
-      await service.deleteTask(taskId, userId);
+        expect(create).toHaveBeenCalledWith({
+          name: request.name,
+          taskList: { id: taskListId } as TaskList,
+          createdBy: { id: userId } as User,
+        });
+        expect(save).toHaveBeenCalledWith(task);
+        expect(result).toEqual(task);
+      });
 
-      expect(findOneBy).toHaveBeenCalledWith({ id: taskId });
-      expect(repoDelete).toHaveBeenCalledWith(taskId);
+      it('should throw NotFoundException when creating a task for a non-existent task list', async () => {
+        const taskListId = 1;
+        const userId = 3;
+        const request = { name: 'New Task', taskListId } as TaskCreateRequest;
+
+        jest.spyOn(taskListRepo, 'findOneBy').mockResolvedValue(null);
+
+        await expect(service.createTask(request, userId)).rejects.toThrow(
+          `Task list with ID ${taskListId} not found, cannot create task`,
+        );
+      });
     });
 
-    it('should throw NotFoundException when deleting a non-existent task', async () => {
-      const taskId = 1;
-      const userId = 2;
-      const deleteResult = { affected: 0, raw: {} };
+    describe('deleteTask', () => {
+      it('should delete a task', async () => {
+        const taskId = 1;
+        const userId = 2;
+        const deleteResult = { affected: 1, raw: {} };
 
-      jest.spyOn(taskRepo, 'findOneBy').mockResolvedValue(null);
-      jest.spyOn(taskRepo, 'delete').mockResolvedValue(deleteResult);
+        const findOneBy = jest
+          .spyOn(taskRepo, 'findOneBy')
+          .mockResolvedValue({ id: taskId, createdBy: { id: userId } } as Task);
 
-      await expect(service.deleteTask(taskId, userId)).rejects.toThrow(
-        `Task with ID ${taskId} not found`,
-      );
-    });
+        const repoDelete = jest
+          .spyOn(taskRepo, 'delete')
+          .mockResolvedValue(deleteResult);
 
-    it('should throw ForbiddenException when deleting a task not owned by user', async () => {
-      const taskId = 1;
-      const userId = 2;
+        await service.deleteTask(taskId, userId);
 
-      jest
-        .spyOn(taskRepo, 'findOneBy')
-        .mockResolvedValue({ id: taskId, createdBy: { id: 3 } } as Task);
+        expect(findOneBy).toHaveBeenCalledWith({ id: taskId });
+        expect(repoDelete).toHaveBeenCalledWith(taskId);
+      });
 
-      await expect(service.deleteTask(taskId, userId)).rejects.toThrow(
-        `Task with ID ${taskId} not owned by user ${userId}`,
-      );
+      it('should throw NotFoundException when deleting a non-existent task', async () => {
+        const taskId = 1;
+        const userId = 2;
+        const deleteResult = { affected: 0, raw: {} };
+
+        jest.spyOn(taskRepo, 'findOneBy').mockResolvedValue(null);
+        jest.spyOn(taskRepo, 'delete').mockResolvedValue(deleteResult);
+
+        await expect(service.deleteTask(taskId, userId)).rejects.toThrow(
+          `Task with ID ${taskId} not found`,
+        );
+      });
+
+      it('should throw ForbiddenException when deleting a task not owned by user', async () => {
+        const taskId = 1;
+        const userId = 2;
+
+        jest
+          .spyOn(taskRepo, 'findOneBy')
+          .mockResolvedValue({ id: taskId, createdBy: { id: 3 } } as Task);
+
+        await expect(service.deleteTask(taskId, userId)).rejects.toThrow(
+          `Task with ID ${taskId} not owned by user ${userId}`,
+        );
+      });
     });
   });
 });
