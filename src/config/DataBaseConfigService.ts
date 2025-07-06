@@ -1,10 +1,10 @@
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import database from './config/database';
+import database from './database';
 
 @Injectable()
-export class TypeOrmConfigService implements TypeOrmOptionsFactory {
+export class DataBaseConfigService implements TypeOrmOptionsFactory {
   constructor(
     @Inject(database.KEY) private dbConfig: ConfigType<typeof database>,
   ) {}
