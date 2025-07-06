@@ -25,8 +25,23 @@ export class TaskService {
     return result;
   }
 
-  createTaskList(taskList: TaskList) {
+  async createTaskList(taskList: TaskList) {
     // TODO: createdBy 字段表示的userId 是否合法由数据库隐式校验，是否应该在这里显式校验
+    return this.taskListRepo.save(taskList);
+  }
+
+  async deleteTaskList(taskListId: number, userId: number) {
+    await this.validateTaskList(taskListId, userId);
+
+    const result = await this.taskListRepo.delete(taskListId);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Task list with ID ${taskListId} not found`);
+    }
+  }
+
+  async renameTaskList(id: number, name: string): Promise<TaskList> {
+    const taskList = await this.findTaskListOrThrow(id);
+    taskList.name = name;
     return this.taskListRepo.save(taskList);
   }
 
@@ -48,28 +63,13 @@ export class TaskService {
     }
   }
 
-  async validateTaskList(
+  private async validateTaskList(
     taskListId: number,
     userId: number,
   ): Promise<TaskList> {
     const taskList = await this.findTaskListOrThrow(taskListId);
     this.assertTaskListOwnerOrThrow(taskList, userId);
     return taskList;
-  }
-
-  async deleteTaskList(taskListId: number, userId: number) {
-    await this.validateTaskList(taskListId, userId);
-
-    const result = await this.taskListRepo.delete(taskListId);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Task list with ID ${taskListId} not found`);
-    }
-  }
-
-  async renameTaskList(id: number, name: string): Promise<TaskList> {
-    const taskList = await this.findTaskListOrThrow(id);
-    taskList.name = name;
-    return this.taskListRepo.save(taskList);
   }
 
   async createTask(request: TaskCreateRequest, userId: number) {
@@ -84,6 +84,15 @@ export class TaskService {
     return this.taskRepo.save(task);
   }
 
+  async deleteTask(taskId: number, userId: number) {
+    await this.validateTask(taskId, userId);
+
+    const result = await this.taskRepo.delete(taskId);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Task with ID ${taskId} not found`);
+    }
+  }
+
   private async findTaskOrThrow(taskId: number): Promise<Task> {
     const task = await this.taskRepo.findOne({
       where: { id: taskId },
@@ -95,32 +104,17 @@ export class TaskService {
     return task;
   }
 
-  private assertTaskOwnerOrThrow(
-    entity: Task,
-    userId: number,
-    notOwnedMsg: string,
-  ) {
-    if (entity.createdBy.id !== userId) {
-      throw new ForbiddenException(notOwnedMsg);
+  private assertTaskOwnerOrThrow(task: Task, userId: number) {
+    if (task.createdBy.id !== userId) {
+      throw new ForbiddenException(
+        `Task with ID ${task.id} not owned by user ${userId}`,
+      );
     }
   }
 
-  async validateTask(taskId: number, userId: number): Promise<Task> {
+  private async validateTask(taskId: number, userId: number): Promise<Task> {
     const task = await this.findTaskOrThrow(taskId);
-    this.assertTaskOwnerOrThrow(
-      task,
-      userId,
-      `Task with ID ${taskId} not owned by user ${userId}`,
-    );
+    this.assertTaskOwnerOrThrow(task, userId);
     return task;
-  }
-
-  async deleteTask(taskId: number, userId: number) {
-    await this.validateTask(taskId, userId);
-
-    const result = await this.taskRepo.delete(taskId);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Task with ID ${taskId} not found`);
-    }
   }
 }
