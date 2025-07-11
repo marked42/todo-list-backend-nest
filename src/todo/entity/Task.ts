@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, RelationId } from 'typeorm';
 import { TaskStatus } from '../enum/TaskStatus';
 import { TraceableEntity } from '@/core/entity/TraceableEntity';
 import { TaskList } from './TaskList';
@@ -21,4 +21,7 @@ export class Task extends TraceableEntity {
   @ManyToOne(() => TaskList, (taskList) => taskList.tasks)
   @JoinColumn({ name: 'task_list_id' })
   taskList: TaskList;
+
+  @RelationId((task: Task) => task.taskList)
+  taskListId: number;
 }

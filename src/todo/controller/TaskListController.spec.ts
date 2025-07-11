@@ -59,7 +59,7 @@ describe('TaskListController', () => {
 
       const expectedTaskList = new TaskList();
       expectedTaskList.name = taskCreateRequestMock.name;
-      expectedTaskList.createdBy = { id: mockUser.id } as User;
+      expectedTaskList.creator = { id: mockUser.id } as User;
 
       const createTaskList = jest
         .spyOn(taskService, 'createTaskList')
@@ -79,7 +79,8 @@ describe('TaskListController', () => {
       expect(result).toEqual({
         ...expectedTaskList,
         id: 1,
-        createdBy: { id: mockUser.id },
+        // TODO:
+        creator: { id: mockUser.id },
       });
     });
   });

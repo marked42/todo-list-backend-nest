@@ -28,8 +28,7 @@ export class TaskService {
 
   async getTaskLists() {
     const result = await this.taskListRepo.find({
-      where: { createdBy: { id: this.userId } },
-      relations: ['createdBy'],
+      where: { creator: { id: this.userId } },
     });
     return result;
   }
@@ -44,16 +43,15 @@ export class TaskService {
     return this.taskListRepo.delete(taskListId);
   }
 
-  async renameTaskList(taskListId: number, newName: string): Promise<TaskList> {
+  async renameTaskList(taskListId: number, newName: string) {
     const taskList = await this.validateTaskList(taskListId);
     taskList.name = newName;
     return this.taskListRepo.save(taskList);
   }
 
-  private async findTaskListOrThrow(taskListId: number): Promise<TaskList> {
+  private async findTaskListOrThrow(taskListId: number) {
     const taskList = await this.taskListRepo.findOne({
       where: { id: taskListId },
-      relations: ['createdBy'],
     });
     if (!taskList) {
       throw new NotFoundException(`Task list with ID ${taskListId} not found`);
@@ -62,7 +60,7 @@ export class TaskService {
   }
 
   private assertTaskListOwnerOrThrow(taskList: TaskList) {
-    if (taskList.createdBy.id !== this.userId) {
+    if (taskList.creatorId !== this.userId) {
       throw new ForbiddenException(
         `Task list with ID ${taskList.id} not owned by user ${this.userId}`,
       );
@@ -79,19 +77,18 @@ export class TaskService {
   async getTasks(taskListId?: number): Promise<Task[]> {
     // TODO: get other user's tasks with permission checking
     const tasks = await this.taskRepo.find({
-      where: { createdBy: { id: this.userId }, taskList: { id: taskListId } },
-      relations: ['taskList'],
+      where: { creator: { id: this.userId }, taskList: { id: taskListId } },
     });
     return tasks;
   }
 
   async createTask(request: TaskCreateRequest) {
-    const taskList = await this.findTaskListOrThrow(request.taskListId);
+    await this.findTaskListOrThrow(request.taskListId);
 
     const task = this.taskRepo.create({
       name: request.name,
-      taskList: taskList,
-      createdBy: { id: this.userId } as User,
+      taskListId: request.taskListId,
+      creatorId: this.userId,
     });
 
     return this.taskRepo.save(task);
@@ -130,7 +127,6 @@ export class TaskService {
   private async findTaskOrThrow(taskId: number): Promise<Task> {
     const task = await this.taskRepo.findOne({
       where: { id: taskId },
-      relations: ['createdBy'],
     });
     if (!task) {
       throw new NotFoundException(`Task with ID ${taskId} not found`);
@@ -139,7 +135,7 @@ export class TaskService {
   }
 
   private assertTaskOwnerOrThrow(task: Task) {
-    if (task.createdBy.id !== this.userId) {
+    if (task.creatorId !== this.userId) {
       throw new ForbiddenException(
         `Task with ID ${task.id} not owned by user ${this.userId}`,
       );
