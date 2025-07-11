@@ -3,10 +3,13 @@ import { TaskController } from './TaskController';
 import { TaskService } from '../service/TaskService';
 import { Task } from '../entity/Task';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { User } from '@/core/entity/User';
 
 describe('TaskController', () => {
   let controller: TaskController;
   let taskService: TaskService;
+
+  const mockUser = { id: 1, name: 'Test' } as User;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -21,6 +24,7 @@ describe('TaskController', () => {
             getTasksByListId: jest.fn(),
             updateTask: jest.fn(),
             moveToAnotherTaskList: jest.fn(),
+            user: mockUser,
           },
         },
       ],
@@ -43,8 +47,6 @@ describe('TaskController', () => {
         taskListId,
       };
 
-      const userId = 2;
-
       const mockTask = {
         id: 1,
         name: mockTaskCreateRequest.name,
@@ -56,8 +58,8 @@ describe('TaskController', () => {
         .spyOn(taskService, 'createTask')
         .mockResolvedValue(mockTask);
 
-      const result = await controller.createTask(mockTaskCreateRequest, userId);
-      expect(createTaskSpy).toHaveBeenCalledWith(mockTaskCreateRequest, userId);
+      const result = await controller.createTask(mockTaskCreateRequest);
+      expect(createTaskSpy).toHaveBeenCalledWith(mockTaskCreateRequest);
       expect(result).toEqual(mockTask);
     });
   });
@@ -65,14 +67,13 @@ describe('TaskController', () => {
   describe('deleteTask', () => {
     it('should delete a task', async () => {
       const taskId = 1;
-      const userId = 2;
 
       const deleteTaskSpy = jest
         .spyOn(taskService, 'deleteTask')
         .mockResolvedValue({ affected: 1, raw: [] });
 
-      const result = await controller.deleteTask(taskId, userId);
-      expect(deleteTaskSpy).toHaveBeenCalledWith(taskId, userId);
+      const result = await controller.deleteTask(taskId);
+      expect(deleteTaskSpy).toHaveBeenCalledWith(taskId);
       expect(result).toEqual({
         success: true,
         message: `Task with ID ${taskId} deleted successfully`,
@@ -81,7 +82,6 @@ describe('TaskController', () => {
 
     it('should throw NotFoundException if task does not exist', async () => {
       const taskId = -1;
-      const userId = 2;
 
       jest
         .spyOn(taskService, 'deleteTask')
@@ -89,7 +89,7 @@ describe('TaskController', () => {
           new NotFoundException(`Task with ID ${taskId} not found`),
         );
 
-      await expect(controller.deleteTask(taskId, userId)).rejects.toThrow(
+      await expect(controller.deleteTask(taskId)).rejects.toThrow(
         `Task with ID ${taskId} not found`,
       );
     });
@@ -106,7 +106,7 @@ describe('TaskController', () => {
           ),
         );
 
-      await expect(controller.deleteTask(taskId, userId)).rejects.toThrow(
+      await expect(controller.deleteTask(taskId)).rejects.toThrow(
         `Task with ID ${taskId} not owned by user ${userId}`,
       );
     });
@@ -115,7 +115,6 @@ describe('TaskController', () => {
   describe('updateTask', () => {
     it('should update a task', async () => {
       const taskId = 1;
-      const userId = 2;
       const updateData = { name: 'Updated Task' };
 
       const updateTaskSpy = jest
@@ -125,8 +124,8 @@ describe('TaskController', () => {
           ...updateData,
         } as Task);
 
-      const result = await controller.updateTask(taskId, userId, updateData);
-      expect(updateTaskSpy).toHaveBeenCalledWith(taskId, userId, updateData);
+      const result = await controller.updateTask(taskId, updateData);
+      expect(updateTaskSpy).toHaveBeenCalledWith(taskId, updateData);
       expect(result).toEqual({
         success: true,
         message: `Task with ID ${taskId} renamed successfully`,
@@ -135,7 +134,6 @@ describe('TaskController', () => {
 
     it('should throw NotFoundException if task does not exist', async () => {
       const taskId = -1;
-      const userId = 2;
       const updateData = { name: 'Updated Task' };
 
       jest
@@ -144,9 +142,9 @@ describe('TaskController', () => {
           new NotFoundException(`Task with ID ${taskId} not found`),
         );
 
-      await expect(
-        controller.updateTask(taskId, userId, updateData),
-      ).rejects.toThrow(`Task with ID ${taskId} not found`);
+      await expect(controller.updateTask(taskId, updateData)).rejects.toThrow(
+        `Task with ID ${taskId} not found`,
+      );
     });
 
     it('should throw ForbiddenException if task does not belong to user', async () => {
@@ -162,16 +160,15 @@ describe('TaskController', () => {
           ),
         );
 
-      await expect(
-        controller.updateTask(taskId, userId, updateData),
-      ).rejects.toThrow(`Task with ID ${taskId} not owned by user ${userId}`);
+      await expect(controller.updateTask(taskId, updateData)).rejects.toThrow(
+        `Task with ID ${taskId} not owned by user ${userId}`,
+      );
     });
   });
 
   describe('moveToAnotherTaskList', () => {
     it('should move a task to another task list', async () => {
       const taskId = 1;
-      const userId = 2;
       const newTaskListId = 3;
 
       const moveTaskSpy = jest
@@ -181,9 +178,8 @@ describe('TaskController', () => {
       const result = await controller.moveToAnotherTaskList(
         taskId,
         newTaskListId,
-        userId,
       );
-      expect(moveTaskSpy).toHaveBeenCalledWith(taskId, newTaskListId, userId);
+      expect(moveTaskSpy).toHaveBeenCalledWith(taskId, newTaskListId);
       expect(result).toEqual({
         success: true,
         message: `Task with ID ${taskId} moved to task list ${newTaskListId} successfully`,
@@ -192,7 +188,6 @@ describe('TaskController', () => {
 
     it('should return successfully if task is already in the target task list', async () => {
       const taskId = 1;
-      const userId = 2;
       const newTaskListId = 1; // Same as current task list id
 
       jest.spyOn(taskService, 'moveToAnotherTaskList').mockResolvedValue(false);
@@ -200,7 +195,6 @@ describe('TaskController', () => {
       const result = await controller.moveToAnotherTaskList(
         taskId,
         newTaskListId,
-        userId,
       );
       expect(result).toEqual({
         success: true,
@@ -210,7 +204,6 @@ describe('TaskController', () => {
 
     it('should throw NotFoundException if task does not exist', async () => {
       const taskId = -1;
-      const userId = 2;
       const newTaskListId = 3;
 
       jest
@@ -220,7 +213,7 @@ describe('TaskController', () => {
         );
 
       await expect(
-        controller.moveToAnotherTaskList(taskId, newTaskListId, userId),
+        controller.moveToAnotherTaskList(taskId, newTaskListId),
       ).rejects.toThrow(`Task with ID ${taskId} not found`);
     });
 
@@ -238,13 +231,12 @@ describe('TaskController', () => {
         );
 
       await expect(
-        controller.moveToAnotherTaskList(taskId, newTaskListId, userId),
+        controller.moveToAnotherTaskList(taskId, newTaskListId),
       ).rejects.toThrow(`Task with ID ${taskId} not owned by user ${userId}`);
     });
 
     it('should throw NotFoundException if target task list does not exist', async () => {
       const taskId = 1;
-      const userId = 2;
       const nonExistTaskListId = -1;
 
       jest
@@ -256,7 +248,7 @@ describe('TaskController', () => {
         );
 
       await expect(
-        controller.moveToAnotherTaskList(taskId, nonExistTaskListId, userId),
+        controller.moveToAnotherTaskList(taskId, nonExistTaskListId),
       ).rejects.toThrow(`Task list with ID ${nonExistTaskListId} not found`);
     });
 
@@ -274,7 +266,7 @@ describe('TaskController', () => {
         );
 
       await expect(
-        controller.moveToAnotherTaskList(taskId, newTaskListId, userId),
+        controller.moveToAnotherTaskList(taskId, newTaskListId),
       ).rejects.toThrow(
         `User ${userId} does not have permission to move task with ID ${taskId}`,
       );

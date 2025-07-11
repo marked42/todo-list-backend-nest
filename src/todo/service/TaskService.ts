@@ -1,7 +1,9 @@
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
+  Scope,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,17 +12,23 @@ import { TaskList } from '../entity/TaskList';
 import { Task } from '../entity/Task';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
+import { CURRENT_USER } from '@/auth/const';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class TaskService {
   constructor(
     @InjectRepository(TaskList) private taskListRepo: Repository<TaskList>,
     @InjectRepository(Task) private taskRepo: Repository<Task>,
+    @Inject(CURRENT_USER) private user: User,
   ) {}
 
-  async getTaskLists(userId?: number): Promise<TaskList[]> {
+  private get userId() {
+    return this.user.id;
+  }
+
+  async getTaskLists() {
     const result = await this.taskListRepo.find({
-      where: { createdBy: { id: userId } },
+      where: { createdBy: { id: this.userId } },
       relations: ['createdBy'],
     });
     return result;
@@ -30,18 +38,14 @@ export class TaskService {
     return this.taskListRepo.save(taskList);
   }
 
-  async deleteTaskList(taskListId: number, userId: number) {
-    await this.validateTaskList(taskListId, userId);
+  async deleteTaskList(taskListId: number) {
+    await this.validateTaskList(taskListId);
 
     return this.taskListRepo.delete(taskListId);
   }
 
-  async renameTaskList(
-    taskListId: number,
-    userId: number,
-    newName: string,
-  ): Promise<TaskList> {
-    const taskList = await this.validateTaskList(taskListId, userId);
+  async renameTaskList(taskListId: number, newName: string): Promise<TaskList> {
+    const taskList = await this.validateTaskList(taskListId);
     taskList.name = newName;
     return this.taskListRepo.save(taskList);
   }
@@ -57,56 +61,53 @@ export class TaskService {
     return taskList;
   }
 
-  private assertTaskListOwnerOrThrow(taskList: TaskList, userId: number) {
-    if (taskList.createdBy.id !== userId) {
+  private assertTaskListOwnerOrThrow(taskList: TaskList) {
+    if (taskList.createdBy.id !== this.userId) {
       throw new ForbiddenException(
-        `Task list with ID ${taskList.id} not owned by user ${userId}`,
+        `Task list with ID ${taskList.id} not owned by user ${this.userId}`,
       );
     }
   }
 
-  private async validateTaskList(
-    taskListId: number,
-    userId: number,
-  ): Promise<TaskList> {
+  private async validateTaskList(taskListId: number): Promise<TaskList> {
     const taskList = await this.findTaskListOrThrow(taskListId);
-    this.assertTaskListOwnerOrThrow(taskList, userId);
+    this.assertTaskListOwnerOrThrow(taskList);
     return taskList;
   }
 
   // TODO: validate userId exist in db
-  async getTasks(userId?: number, taskListId?: number): Promise<Task[]> {
+  async getTasks(taskListId?: number): Promise<Task[]> {
+    // TODO: get other user's tasks with permission checking
     const tasks = await this.taskRepo.find({
-      where: { createdBy: { id: userId }, taskList: { id: taskListId } },
+      where: { createdBy: { id: this.userId }, taskList: { id: taskListId } },
       relations: ['taskList'],
     });
     return tasks;
   }
 
-  async createTask(request: TaskCreateRequest, userId: number) {
+  async createTask(request: TaskCreateRequest) {
     const taskList = await this.findTaskListOrThrow(request.taskListId);
 
     const task = this.taskRepo.create({
       name: request.name,
       taskList: taskList,
-      createdBy: { id: userId } as User,
+      createdBy: { id: this.userId } as User,
     });
 
     return this.taskRepo.save(task);
   }
 
-  async deleteTask(taskId: number, userId: number) {
-    await this.validateTask(taskId, userId);
+  async deleteTask(taskId: number) {
+    await this.validateTask(taskId);
 
     return this.taskRepo.delete(taskId);
   }
 
   async updateTask(
     taskId: number,
-    userId: number,
     updateData: TaskUpdateRequest,
   ): Promise<Task> {
-    const task = await this.validateTask(taskId, userId);
+    const task = await this.validateTask(taskId);
 
     // Update only the fields that are provided in updateData
     Object.assign(task, updateData);
@@ -114,19 +115,12 @@ export class TaskService {
     return this.taskRepo.save(task);
   }
 
-  async moveToAnotherTaskList(
-    taskId: number,
-    targetTaskListId: number,
-    userId: number,
-  ) {
-    const task = await this.validateTask(taskId, userId);
+  async moveToAnotherTaskList(taskId: number, targetTaskListId: number) {
+    const task = await this.validateTask(taskId);
     if (task.taskList.id === targetTaskListId) {
       return false;
     }
-    const targetTaskList = await this.validateTaskList(
-      targetTaskListId,
-      userId,
-    );
+    const targetTaskList = await this.validateTaskList(targetTaskListId);
 
     task.taskList = targetTaskList;
     await this.taskRepo.save(task);
@@ -144,17 +138,17 @@ export class TaskService {
     return task;
   }
 
-  private assertTaskOwnerOrThrow(task: Task, userId: number) {
-    if (task.createdBy.id !== userId) {
+  private assertTaskOwnerOrThrow(task: Task) {
+    if (task.createdBy.id !== this.userId) {
       throw new ForbiddenException(
-        `Task with ID ${task.id} not owned by user ${userId}`,
+        `Task with ID ${task.id} not owned by user ${this.userId}`,
       );
     }
   }
 
-  private async validateTask(taskId: number, userId: number): Promise<Task> {
+  private async validateTask(taskId: number): Promise<Task> {
     const task = await this.findTaskOrThrow(taskId);
-    this.assertTaskOwnerOrThrow(task, userId);
+    this.assertTaskOwnerOrThrow(task);
     return task;
   }
 }

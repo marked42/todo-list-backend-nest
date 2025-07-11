@@ -8,6 +8,7 @@ import { Request } from 'express';
 
 export type UserPayload = RequestUser;
 
+// TODO: move to auth module
 export const CurrentUser = createParamDecorator(
   (data: keyof UserPayload, ctx: ExecutionContext) => {
     // Assuming the user is stored in the request object
