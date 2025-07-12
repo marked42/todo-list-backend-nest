@@ -13,12 +13,15 @@ import { Task } from '../entity/Task';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 import { CURRENT_USER } from '@/auth/const';
+import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
+import { MoveTaskResult } from '../enum/MoveTaskResult';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TaskService {
   constructor(
     @InjectRepository(TaskList) private taskListRepo: Repository<TaskList>,
     @InjectRepository(Task) private taskRepo: Repository<Task>,
+    // TODO: user may not exist, anonymous user
     @Inject(CURRENT_USER) private user: User,
   ) {}
 
@@ -27,13 +30,19 @@ export class TaskService {
   }
 
   async getTaskLists() {
+    // TODO: fix type
     const result = await this.taskListRepo.find({
       where: { creator: { id: this.userId } },
     });
     return result;
   }
 
-  async createTaskList(taskList: TaskList) {
+  async createTaskList(request: TaskListCreateRequest) {
+    const taskList = this.taskListRepo.create({
+      name: request.name,
+      creator: { id: this.userId },
+    });
+
     return this.taskListRepo.save(taskList);
   }
 
@@ -50,6 +59,7 @@ export class TaskService {
   }
 
   private async findTaskListOrThrow(taskListId: number) {
+    // TODO: fix type
     const taskList = await this.taskListRepo.findOne({
       where: { id: taskListId },
     });
@@ -67,15 +77,19 @@ export class TaskService {
     }
   }
 
-  private async validateTaskList(taskListId: number): Promise<TaskList> {
+  private async validateTaskList(taskListId: number) {
     const taskList = await this.findTaskListOrThrow(taskListId);
     this.assertTaskListOwnerOrThrow(taskList);
     return taskList;
   }
 
   // TODO: validate userId exist in db
-  async getTasks(taskListId?: number): Promise<Task[]> {
+  async getTasks(taskListId?: number) {
     // TODO: get other user's tasks with permission checking
+    if (taskListId) {
+      await this.validateTaskList(taskListId);
+    }
+
     const tasks = await this.taskRepo.find({
       where: { creator: { id: this.userId }, taskList: { id: taskListId } },
     });
@@ -83,12 +97,12 @@ export class TaskService {
   }
 
   async createTask(request: TaskCreateRequest) {
-    await this.findTaskListOrThrow(request.taskListId);
+    await this.validateTaskList(request.taskListId);
 
     const task = this.taskRepo.create({
       name: request.name,
-      taskListId: request.taskListId,
-      creatorId: this.userId,
+      taskList: { id: request.taskListId },
+      creator: { id: this.userId },
     });
 
     return this.taskRepo.save(task);
@@ -100,10 +114,7 @@ export class TaskService {
     return this.taskRepo.delete(taskId);
   }
 
-  async updateTask(
-    taskId: number,
-    updateData: TaskUpdateRequest,
-  ): Promise<Task> {
+  async updateTask(taskId: number, updateData: TaskUpdateRequest) {
     const task = await this.validateTask(taskId);
 
     // Update only the fields that are provided in updateData
@@ -114,17 +125,18 @@ export class TaskService {
 
   async moveToAnotherTaskList(taskId: number, targetTaskListId: number) {
     const task = await this.validateTask(taskId);
-    if (task.taskList.id === targetTaskListId) {
-      return false;
+    if (task.taskListId === targetTaskListId) {
+      return MoveTaskResult.AlreadyInList;
     }
     const targetTaskList = await this.validateTaskList(targetTaskListId);
 
     task.taskList = targetTaskList;
     await this.taskRepo.save(task);
-    return true;
+    return MoveTaskResult.Moved;
   }
 
-  private async findTaskOrThrow(taskId: number): Promise<Task> {
+  private async findTaskOrThrow(taskId: number) {
+    // TODO: no relations, so taskList field is undefine, fix type
     const task = await this.taskRepo.findOne({
       where: { id: taskId },
     });
@@ -142,7 +154,7 @@ export class TaskService {
     }
   }
 
-  private async validateTask(taskId: number): Promise<Task> {
+  private async validateTask(taskId: number) {
     const task = await this.findTaskOrThrow(taskId);
     this.assertTaskOwnerOrThrow(task);
     return task;

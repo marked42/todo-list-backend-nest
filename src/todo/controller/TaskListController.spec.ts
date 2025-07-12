@@ -1,9 +1,9 @@
 import { Test } from '@nestjs/testing';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { User } from '@/core/entity/User';
 import { TaskService } from '../service/TaskService';
 import { TaskListController } from './TaskListController';
 import { TaskList } from '../entity/TaskList';
-import { User } from '@/core/entity/User';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
 describe('TaskListController', () => {
   let controller: TaskListController;
