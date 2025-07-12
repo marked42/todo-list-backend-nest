@@ -4,6 +4,7 @@ import { TaskService } from '../service/TaskService';
 import { Task } from '../entity/Task';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { User } from '@/core/entity/User';
+import { MoveTaskResult } from '../enum/MoveTaskResult';
 
 describe('TaskController', () => {
   let controller: TaskController;
@@ -128,7 +129,7 @@ describe('TaskController', () => {
       expect(updateTaskSpy).toHaveBeenCalledWith(taskId, updateData);
       expect(result).toEqual({
         success: true,
-        message: `Task with ID ${taskId} renamed successfully`,
+        message: `Task with ID ${taskId} updated successfully`,
       });
     });
 
@@ -173,7 +174,7 @@ describe('TaskController', () => {
 
       const moveTaskSpy = jest
         .spyOn(taskService, 'moveToAnotherTaskList')
-        .mockResolvedValue(true);
+        .mockResolvedValue(MoveTaskResult.Moved);
 
       const result = await controller.moveToAnotherTaskList(
         taskId,
@@ -190,7 +191,9 @@ describe('TaskController', () => {
       const taskId = 1;
       const newTaskListId = 1; // Same as current task list id
 
-      jest.spyOn(taskService, 'moveToAnotherTaskList').mockResolvedValue(false);
+      jest
+        .spyOn(taskService, 'moveToAnotherTaskList')
+        .mockResolvedValue(MoveTaskResult.AlreadyInList);
 
       const result = await controller.moveToAnotherTaskList(
         taskId,

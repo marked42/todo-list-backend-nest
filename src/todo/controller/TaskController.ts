@@ -12,6 +12,7 @@ import {
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskService } from '../service/TaskService';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
+import { MoveTaskResult } from '../enum/MoveTaskResult';
 
 @Controller('tasks')
 export class TaskController {
@@ -50,11 +51,11 @@ export class TaskController {
     await this.taskService.updateTask(taskId, updateData);
     return {
       success: true,
-      message: `Task with ID ${taskId} renamed successfully`,
+      message: `Task with ID ${taskId} updated successfully`,
     };
   }
 
-  @Patch('/:id/move')
+  @Post('/:id/move')
   async moveToAnotherTaskList(
     @Param('id', new ParseIntPipe({ optional: false })) taskId: number,
     @Query('taskListId', new ParseIntPipe({ optional: false }))
@@ -65,16 +66,19 @@ export class TaskController {
       taskListId,
     );
 
-    if (!moved) {
-      return {
-        success: true,
-        message: `Task with ID ${taskId} is already in task list ${taskListId}`,
-      };
+    switch (moved) {
+      case MoveTaskResult.AlreadyInList:
+        return {
+          success: true,
+          message: `Task with ID ${taskId} is already in task list ${taskListId}`,
+        };
+      case MoveTaskResult.Moved:
+        return {
+          success: true,
+          message: `Task with ID ${taskId} moved to task list ${taskListId} successfully`,
+        };
+      default:
+        throw new Error('unreachable case');
     }
-
-    return {
-      success: true,
-      message: `Task with ID ${taskId} moved to task list ${taskListId} successfully`,
-    };
   }
 }

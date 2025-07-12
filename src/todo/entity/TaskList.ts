@@ -1,6 +1,6 @@
 import { Column, Entity, OneToMany } from 'typeorm';
-import { TaskListStatus } from '../enum/TaskListStatus';
 import { TraceableEntity } from '@/core/entity/TraceableEntity';
+import { TaskListStatus } from '../enum/TaskListStatus';
 import { Task } from './Task';
 
 @Entity()
@@ -12,7 +12,7 @@ export class TaskList extends TraceableEntity {
   tasks: Task[];
 
   @Column({
-    type: 'enum',
+    type: 'varchar',
     enum: TaskListStatus,
     default: TaskListStatus.Active,
   })

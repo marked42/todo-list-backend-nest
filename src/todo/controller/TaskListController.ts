@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { TaskService } from '../service/TaskService';
 import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
-import { TaskList } from '../entity/TaskList';
 
 @Controller('/task-lists')
 export class TaskListController {
@@ -24,11 +23,7 @@ export class TaskListController {
 
   @Post()
   createTaskList(@Body() request: TaskListCreateRequest) {
-    // TODO: refactor
-    const taskList = new TaskList();
-    taskList.name = request.name;
-
-    return this.taskService.createTaskList(taskList);
+    return this.taskService.createTaskList(request);
   }
 
   @Delete('/:id')
