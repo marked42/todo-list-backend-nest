@@ -147,8 +147,20 @@ export class TaskService {
     }
     const targetTaskList = await this.validateTaskList(request.taskListId);
 
+    const lastTaskInList = await this.taskRepo.findOne({
+      where: {
+        taskList: { id: targetTaskList.id },
+        creator: { id: this.userId },
+      },
+      order: {
+        order: 'DESC',
+      },
+    });
+
     task.taskList = targetTaskList;
-    // TODO: default task order
+    // at last by default
+    task.order = lastTaskInList ? lastTaskInList.order + 1 : 0;
+
     await this.taskRepo.save(task);
     return TaskMoveResult.Success;
   }
