@@ -25,7 +25,6 @@ export class TaskService {
   constructor(
     @InjectRepository(TaskList) private taskListRepo: Repository<TaskList>,
     @InjectRepository(Task) private taskRepo: Repository<Task>,
-    // TODO: user may not exist, anonymous user
     @Inject(CURRENT_USER) private user: User,
   ) {}
 
@@ -85,7 +84,6 @@ export class TaskService {
     return taskList;
   }
 
-  // TODO: validate userId exist in db
   async getTasks(param?: TaskQueryParam) {
     const { taskListId, order = DEFAULT_TASK_ORDER } = param || {};
     // TODO: get other user's tasks with permission checking
