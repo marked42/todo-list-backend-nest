@@ -1,10 +1,10 @@
 import { Test } from '@nestjs/testing';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { User } from '@/core/entity/User';
 import { TaskController } from './TaskController';
 import { TaskService } from '../service/TaskService';
 import { Task } from '../entity/Task';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { User } from '@/core/entity/User';
-import { TaskMoveResult } from '../enum/TaskMoveResult';
+import { TaskMoveResult } from '../model';
 
 describe('TaskController', () => {
   let controller: TaskController;

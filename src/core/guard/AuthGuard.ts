@@ -4,9 +4,9 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Request } from 'express';
-import { TOKEN_PREFIX } from '../const/user';
 import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
+import { TOKEN_PREFIX } from '../model';
 import { RequestUser } from '../entity/User';
 
 @Injectable()

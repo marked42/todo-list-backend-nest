@@ -13,9 +13,9 @@ import { TaskList } from '../entity/TaskList';
 import { Task } from '../entity/Task';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
-import { CURRENT_USER } from '@/auth/const';
+import { CURRENT_USER } from '@/auth/model';
 import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
-import { TaskMoveResult } from '../enum/TaskMoveResult';
+import { TaskMoveResult } from '../model';
 import { TaskPosition, TaskReorderRequest } from '../dto/TaskReorderRequest';
 
 @Injectable({ scope: Scope.REQUEST })
