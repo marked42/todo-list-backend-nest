@@ -18,6 +18,7 @@ import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
 import { TaskMoveResult } from '../model';
 import { TaskPosition, TaskReorderRequest } from '../dto/TaskReorderRequest';
 import { TaskMoveRequest } from '../dto/TaskMoveRequest';
+import { DEFAULT_TASK_ORDER, TaskQueryParam } from '../dto/TaskQueryParam';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TaskService {
@@ -85,7 +86,8 @@ export class TaskService {
   }
 
   // TODO: validate userId exist in db
-  async getTasks(taskListId?: number) {
+  async getTasks(param?: TaskQueryParam) {
+    const { taskListId, order = DEFAULT_TASK_ORDER } = param || {};
     // TODO: get other user's tasks with permission checking
     if (taskListId) {
       await this.validateTaskList(taskListId);
@@ -93,8 +95,7 @@ export class TaskService {
 
     const tasks = await this.taskRepo.find({
       where: { creator: { id: this.userId }, taskList: { id: taskListId } },
-      // TODO: in specified order
-      order: { order: 'ASC' },
+      order: { order },
     });
     return tasks;
   }
