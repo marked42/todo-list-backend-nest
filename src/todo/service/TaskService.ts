@@ -137,7 +137,10 @@ export class TaskService {
     return this.taskRepo.save(task);
   }
 
-  async moveToAnotherTaskList(taskId: number, request: TaskMoveRequest) {
+  /**
+   * move task to another task list
+   */
+  async moveTask(taskId: number, request: TaskMoveRequest) {
     const task = await this.validateTask(taskId);
     if (task.taskListId === request.taskListId) {
       return TaskMoveResult.AlreadyInPlace;
@@ -147,10 +150,10 @@ export class TaskService {
     task.taskList = targetTaskList;
     // TODO: default task order
     await this.taskRepo.save(task);
-    return TaskMoveResult.Moved;
+    return TaskMoveResult.Success;
   }
 
-  private async moveToFirst(taskId: number) {
+  private async reorderToFirst(taskId: number) {
     const task = await this.validateTask(taskId);
 
     const firstTask = await this.taskRepo.findOne({
@@ -170,10 +173,10 @@ export class TaskService {
     task.order = newOrder;
 
     await this.taskRepo.save(task);
-    return TaskMoveResult.Moved;
+    return TaskMoveResult.Success;
   }
 
-  private async moveToLast(taskId: number) {
+  private async reorderToLast(taskId: number) {
     const task = await this.validateTask(taskId);
 
     const lastTask = await this.taskRepo.findOne({
@@ -193,18 +196,21 @@ export class TaskService {
     task.order = newOrder;
 
     await this.taskRepo.save(task);
-    return TaskMoveResult.Moved;
+    return TaskMoveResult.Success;
   }
 
+  /**
+   * reorder task to different position in same task list
+   */
   async reorderTask(taskId: number, request: TaskReorderRequest) {
     const { position, anchorTaskId } = request;
 
     if (position === TaskPosition.First) {
-      return this.moveToFirst(taskId);
+      return this.reorderToFirst(taskId);
     }
 
     if (position === TaskPosition.Last) {
-      return this.moveToLast(taskId);
+      return this.reorderToLast(taskId);
     }
 
     // TODO: better checked by parameter validation
@@ -273,7 +279,7 @@ export class TaskService {
     });
 
     await this.taskRepo.save(changedTasks);
-    return TaskMoveResult.Moved;
+    return TaskMoveResult.Success;
   }
 
   private async findTaskOrThrow(taskId: number) {

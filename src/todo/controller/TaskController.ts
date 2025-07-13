@@ -59,11 +59,11 @@ export class TaskController {
 
   // TODO: specify order
   @Post('/:id/move')
-  async moveToAnotherTaskList(
+  async moveTask(
     @Param('id', new ParseIntPipe({ optional: false })) taskId: number,
     @Body() request: TaskMoveRequest,
   ) {
-    const moved = await this.taskService.moveToAnotherTaskList(taskId, request);
+    const moved = await this.taskService.moveTask(taskId, request);
 
     switch (moved) {
       case TaskMoveResult.AlreadyInPlace:
@@ -71,7 +71,7 @@ export class TaskController {
           success: true,
           message: `Task with ID ${taskId} is already in task list ${request.taskListId}`,
         };
-      case TaskMoveResult.Moved:
+      case TaskMoveResult.Success:
         return {
           success: true,
           message: `Task with ID ${taskId} moved to task list ${request.taskListId} successfully`,
