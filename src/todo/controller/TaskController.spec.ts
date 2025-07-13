@@ -5,6 +5,7 @@ import { TaskController } from './TaskController';
 import { TaskService } from '../service/TaskService';
 import { Task } from '../entity/Task';
 import { TaskMoveResult } from '../model';
+import { TaskMoveRequest } from '../dto/TaskMoveRequest';
 
 describe('TaskController', () => {
   let controller: TaskController;
@@ -170,26 +171,29 @@ describe('TaskController', () => {
   describe('moveToAnotherTaskList', () => {
     it('should move a task to another task list', async () => {
       const taskId = 1;
-      const newTaskListId = 3;
 
       const moveTaskSpy = jest
         .spyOn(taskService, 'moveToAnotherTaskList')
         .mockResolvedValue(TaskMoveResult.Moved);
+      const moveRequest = new TaskMoveRequest();
+      moveRequest.taskListId = 3;
 
       const result = await controller.moveToAnotherTaskList(
         taskId,
-        newTaskListId,
+        moveRequest,
       );
-      expect(moveTaskSpy).toHaveBeenCalledWith(taskId, newTaskListId);
+      expect(moveTaskSpy).toHaveBeenCalledWith(taskId, moveRequest);
       expect(result).toEqual({
         success: true,
-        message: `Task with ID ${taskId} moved to task list ${newTaskListId} successfully`,
+        message: `Task with ID ${taskId} moved to task list ${moveRequest.taskListId} successfully`,
       });
     });
 
     it('should return successfully if task is already in the target task list', async () => {
       const taskId = 1;
-      const newTaskListId = 1; // Same as current task list id
+      const moveRequest = new TaskMoveRequest();
+      // Same as current task list id
+      moveRequest.taskListId = 1;
 
       jest
         .spyOn(taskService, 'moveToAnotherTaskList')
@@ -197,17 +201,18 @@ describe('TaskController', () => {
 
       const result = await controller.moveToAnotherTaskList(
         taskId,
-        newTaskListId,
+        moveRequest,
       );
       expect(result).toEqual({
         success: true,
-        message: `Task with ID ${taskId} is already in task list ${newTaskListId}`,
+        message: `Task with ID ${taskId} is already in task list ${moveRequest.taskListId}`,
       });
     });
 
     it('should throw NotFoundException if task does not exist', async () => {
       const taskId = -1;
-      const newTaskListId = 3;
+      const moveRequest = new TaskMoveRequest();
+      moveRequest.taskListId = 3;
 
       jest
         .spyOn(taskService, 'moveToAnotherTaskList')
@@ -216,14 +221,15 @@ describe('TaskController', () => {
         );
 
       await expect(
-        controller.moveToAnotherTaskList(taskId, newTaskListId),
+        controller.moveToAnotherTaskList(taskId, moveRequest),
       ).rejects.toThrow(`Task with ID ${taskId} not found`);
     });
 
     it('should throw ForbiddenException if task does not belong to user', async () => {
       const taskId = 1;
       const userId = 2;
-      const newTaskListId = 3;
+      const moveRequest = new TaskMoveRequest();
+      moveRequest.taskListId = 3;
 
       jest
         .spyOn(taskService, 'moveToAnotherTaskList')
@@ -234,31 +240,35 @@ describe('TaskController', () => {
         );
 
       await expect(
-        controller.moveToAnotherTaskList(taskId, newTaskListId),
+        controller.moveToAnotherTaskList(taskId, moveRequest),
       ).rejects.toThrow(`Task with ID ${taskId} not owned by user ${userId}`);
     });
 
     it('should throw NotFoundException if target task list does not exist', async () => {
       const taskId = 1;
-      const nonExistTaskListId = -1;
+      const moveRequest = new TaskMoveRequest();
+      moveRequest.taskListId = -1;
 
       jest
         .spyOn(taskService, 'moveToAnotherTaskList')
         .mockRejectedValue(
           new NotFoundException(
-            `Task list with ID ${nonExistTaskListId} not found`,
+            `Task list with ID ${moveRequest.taskListId} not found`,
           ),
         );
 
       await expect(
-        controller.moveToAnotherTaskList(taskId, nonExistTaskListId),
-      ).rejects.toThrow(`Task list with ID ${nonExistTaskListId} not found`);
+        controller.moveToAnotherTaskList(taskId, moveRequest),
+      ).rejects.toThrow(
+        `Task list with ID ${moveRequest.taskListId} not found`,
+      );
     });
 
     it('should throw ForbiddenException if user does not have permission to move task', async () => {
       const taskId = 1;
       const userId = 2;
-      const newTaskListId = 3;
+      const moveRequest = new TaskMoveRequest();
+      moveRequest.taskListId = 3;
 
       jest
         .spyOn(taskService, 'moveToAnotherTaskList')
@@ -269,7 +279,7 @@ describe('TaskController', () => {
         );
 
       await expect(
-        controller.moveToAnotherTaskList(taskId, newTaskListId),
+        controller.moveToAnotherTaskList(taskId, moveRequest),
       ).rejects.toThrow(
         `User ${userId} does not have permission to move task with ID ${taskId}`,
       );

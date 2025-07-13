@@ -21,5 +21,5 @@ export class TaskReorderRequest {
     ),
   )
   @IsString()
-  targetTaskId?: number;
+  taskId?: number;
 }
