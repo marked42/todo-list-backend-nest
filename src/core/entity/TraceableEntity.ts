@@ -4,8 +4,11 @@ import { BaseEntity } from './BaseEntity';
 
 @Entity()
 export class TraceableEntity extends BaseEntity {
+  /**
+   * optional field lazy loading strategy by default
+   */
   @ManyToOne(() => User, { nullable: false })
-  creator: User;
+  creator?: User;
 
   @RelationId((entity: TraceableEntity) => entity.creator)
   creatorId: number;

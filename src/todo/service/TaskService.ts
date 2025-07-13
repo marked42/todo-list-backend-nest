@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -14,7 +15,8 @@ import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 import { CURRENT_USER } from '@/auth/const';
 import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
-import { MoveTaskResult } from '../enum/MoveTaskResult';
+import { MoveTaskResult, ReorderTaskResult } from '../enum/MoveTaskResult';
+import { TaskPosition, TaskReorderRequest } from '../dto/TaskReorderRequest';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TaskService {
@@ -30,7 +32,6 @@ export class TaskService {
   }
 
   async getTaskLists() {
-    // TODO: fix type
     const result = await this.taskListRepo.find({
       where: { creator: { id: this.userId } },
     });
@@ -59,7 +60,6 @@ export class TaskService {
   }
 
   private async findTaskListOrThrow(taskListId: number) {
-    // TODO: fix type
     const taskList = await this.taskListRepo.findOne({
       where: { id: taskListId },
     });
@@ -92,6 +92,8 @@ export class TaskService {
 
     const tasks = await this.taskRepo.find({
       where: { creator: { id: this.userId }, taskList: { id: taskListId } },
+      // TODO: in specified order
+      order: { order: 'ASC' },
     });
     return tasks;
   }
@@ -99,10 +101,21 @@ export class TaskService {
   async createTask(request: TaskCreateRequest) {
     await this.validateTaskList(request.taskListId);
 
+    const lastTask = await this.taskRepo.findOne({
+      where: {
+        creator: { id: this.userId },
+        taskList: { id: request.taskListId },
+      },
+      order: { order: 'DESC' },
+    });
+    // new task at last by default
+    const newOrder = lastTask ? lastTask.order + 1 : 0;
+
     const task = this.taskRepo.create({
       name: request.name,
       taskList: { id: request.taskListId },
       creator: { id: this.userId },
+      order: newOrder,
     });
 
     return this.taskRepo.save(task);
@@ -131,12 +144,138 @@ export class TaskService {
     const targetTaskList = await this.validateTaskList(targetTaskListId);
 
     task.taskList = targetTaskList;
+    // TODO: default task order
     await this.taskRepo.save(task);
     return MoveTaskResult.Moved;
   }
 
+  private async moveToFirst(taskId: number) {
+    const task = await this.validateTask(taskId);
+
+    const firstTask = await this.taskRepo.findOne({
+      where: {
+        creator: { id: this.userId },
+        taskList: { id: task.taskListId },
+      },
+      order: { order: 'ASC' },
+    });
+
+    if (firstTask?.id === taskId) {
+      return ReorderTaskResult.AlreadyInPlace;
+    }
+
+    // TODO: may underflow
+    const newOrder = firstTask ? firstTask.order - 1 : 0;
+    task.order = newOrder;
+
+    await this.taskRepo.save(task);
+    return ReorderTaskResult.Moved;
+  }
+
+  private async moveToLast(taskId: number) {
+    const task = await this.validateTask(taskId);
+
+    const lastTask = await this.taskRepo.findOne({
+      where: {
+        creator: { id: this.userId },
+        taskList: { id: task.taskListId },
+      },
+      order: { order: 'DESC' },
+    });
+
+    if (lastTask?.id === taskId) {
+      return ReorderTaskResult.AlreadyInPlace;
+    }
+
+    // TODO: may overflow
+    const newOrder = lastTask ? lastTask.order + 1 : 0;
+    task.order = newOrder;
+
+    await this.taskRepo.save(task);
+    return ReorderTaskResult.Moved;
+  }
+
+  async reorderTask(taskId: number, request: TaskReorderRequest) {
+    const { position, targetTaskId } = request;
+
+    if (position === TaskPosition.First) {
+      return this.moveToFirst(taskId);
+    }
+
+    if (position === TaskPosition.Last) {
+      return this.moveToLast(taskId);
+    }
+
+    // TODO: better checked by parameter validation
+    if (targetTaskId === undefined) {
+      // If no target task is specified, we cannot reorder
+      throw new BadRequestException(
+        'Target task ID must be provided for relative reordering (Before, After)',
+      );
+    }
+
+    if (taskId === targetTaskId) {
+      return ReorderTaskResult.AlreadyInPlace;
+    }
+
+    const task = await this.validateTask(taskId);
+    const targetTask = await this.validateTask(targetTaskId);
+
+    const beforeTargetTask =
+      position === TaskPosition.Before && task.order === targetTask.order - 1;
+    const afterTargetTask =
+      position === TaskPosition.After && task.order === targetTask.order + 1;
+    const alreadyInPlace = beforeTargetTask || afterTargetTask;
+    if (alreadyInPlace) {
+      return ReorderTaskResult.AlreadyInPlace;
+    }
+
+    const tasks = await this.taskRepo.find({
+      where: {
+        creator: { id: this.userId },
+        taskList: { id: task.taskListId },
+      },
+      order: { order: 'ASC' },
+    });
+    const taskOrder = task.order;
+    const taskIndex = tasks.findIndex((t) => t.id === taskId);
+    const targetTaskOrder = targetTask.order;
+    const targetTaskIndex = tasks.findIndex((t) => t.id === targetTaskId);
+
+    let changedTasks = [] as Task[];
+    let startOrder = 0;
+    if (taskOrder > targetTaskOrder) {
+      if (position === TaskPosition.Before) {
+        changedTasks = [task, ...tasks.slice(targetTaskIndex, taskIndex)];
+        startOrder = targetTaskOrder;
+      } else if (position === TaskPosition.After) {
+        changedTasks = [task, ...tasks.slice(targetTaskIndex + 1, taskIndex)];
+        startOrder = targetTaskOrder + 1;
+      }
+    } else if (taskOrder < targetTaskOrder) {
+      if (position === TaskPosition.Before) {
+        changedTasks = [...tasks.slice(taskIndex + 1, targetTaskIndex), task];
+        startOrder = taskOrder;
+      } else if (position === TaskPosition.After) {
+        changedTasks = [
+          ...tasks.slice(taskIndex + 1, targetTaskIndex + 1),
+          task,
+        ];
+        startOrder = taskOrder;
+      }
+    } else {
+      throw new ForbiddenException('Impossible case: task orders are equal');
+    }
+
+    changedTasks.forEach((t, index) => {
+      t.order = startOrder + index;
+    });
+
+    await this.taskRepo.save(changedTasks);
+    return ReorderTaskResult.Moved;
+  }
+
   private async findTaskOrThrow(taskId: number) {
-    // TODO: no relations, so taskList field is undefine, fix type
     const task = await this.taskRepo.findOne({
       where: { id: taskId },
     });

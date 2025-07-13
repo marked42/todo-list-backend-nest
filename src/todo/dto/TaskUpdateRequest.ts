@@ -15,7 +15,7 @@ export class TaskUpdateRequest {
 
   @IsOptional()
   @IsEnum(TaskStatus, {
-    message: '状态必须是 Todo、Doing 或 Done',
+    message: `状态必须是 ${Object.values(TaskStatus).join(', ')}`,
   })
   status?: TaskStatus;
 }
