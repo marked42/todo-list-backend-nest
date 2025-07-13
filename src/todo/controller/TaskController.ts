@@ -15,17 +15,15 @@ import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 import { TaskReorderRequest } from '../dto/TaskReorderRequest';
 import { TaskMoveRequest } from '../dto/TaskMoveRequest';
 import { TaskService } from '../service/TaskService';
+import { TaskQueryParam } from '../dto/TaskQueryParam';
 
 @Controller('tasks')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Get()
-  async getTasks(
-    @Query('taskListId', new ParseIntPipe({ optional: true }))
-    taskListId?: number,
-  ) {
-    return this.taskService.getTasks(taskListId);
+  async getTasks(@Query() taskQueryParam: TaskQueryParam) {
+    return this.taskService.getTasks(taskQueryParam);
   }
 
   @Post()

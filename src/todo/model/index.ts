@@ -13,3 +13,8 @@ export enum TaskStatus {
   Doing = 'doing',
   Done = 'done',
 }
+
+export enum TaskOrder {
+  ASC = 'asc',
+  DESC = 'desc',
+}

@@ -10,8 +10,14 @@ import { Task } from '../entity/Task';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 import { TaskPosition, TaskReorderRequest } from '../dto/TaskReorderRequest';
-import { TaskListStatus, TaskMoveResult, TaskStatus } from '../model';
+import {
+  TaskListStatus,
+  TaskMoveResult,
+  TaskOrder,
+  TaskStatus,
+} from '../model';
 import { TaskMoveRequest } from '../dto/TaskMoveRequest';
+import { TaskQueryParam } from '../dto/TaskQueryParam';
 
 const getEntityId = (entity: { id: number }) => entity.id;
 
@@ -347,18 +353,40 @@ describe('TaskService', () => {
 
   describe('task', () => {
     describe('getTasks', () => {
-      it('should return tasks in given task list owned by current user in ascending order', async () => {
+      it('should return tasks in given task list owned by current user in ascending order by default', async () => {
         const taskListId = db.firstOwnedTaskList.id;
         const userTasksInList = db.tasks.filter(
           (task) => ownedByCurrentUser(task) && task.taskListId === taskListId,
         );
-        const tasks = await service.getTasks(taskListId);
+        const param = new TaskQueryParam();
+        param.taskListId = taskListId;
+
+        const tasks = await service.getTasks(param);
 
         expect(tasks).toBeSorted({ key: 'order' });
 
         expect(tasks.length).toEqual(userTasksInList.length);
         expect(tasks.map(getEntityId)).toEqual(
           userTasksInList.map(getEntityId),
+        );
+      });
+
+      it('should return tasks in given task list owned by current user in descending order', async () => {
+        const taskListId = db.firstOwnedTaskList.id;
+        const userTasksInList = db.tasks.filter(
+          (task) => ownedByCurrentUser(task) && task.taskListId === taskListId,
+        );
+        const param = new TaskQueryParam();
+        param.taskListId = taskListId;
+        param.order = TaskOrder.DESC;
+
+        const tasks = await service.getTasks(param);
+
+        expect(tasks).toBeSorted({ key: 'order', descending: true });
+
+        expect(tasks.length).toEqual(userTasksInList.length);
+        expect(new Set(tasks.map(getEntityId))).toEqual(
+          new Set(userTasksInList.map(getEntityId)),
         );
       });
 
@@ -369,9 +397,11 @@ describe('TaskService', () => {
       });
 
       it('should throw error for a given task list not owned by current user', async () => {
-        const taskListId = db.firstUnownedTaskList.id;
-        await expect(service.getTasks(taskListId)).rejects.toThrow(
-          `Task list with ID ${taskListId} not owned by user ${mockCurrentUser.id}`,
+        const param = new TaskQueryParam();
+        param.taskListId = db.firstUnownedTaskList.id;
+
+        await expect(service.getTasks(param)).rejects.toThrow(
+          `Task list with ID ${param.taskListId} not owned by user ${mockCurrentUser.id}`,
         );
       });
     });
