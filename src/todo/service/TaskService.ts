@@ -197,7 +197,7 @@ export class TaskService {
   }
 
   async reorderTask(taskId: number, request: TaskReorderRequest) {
-    const { position, taskId: targetTaskId } = request;
+    const { position, anchorTaskId } = request;
 
     if (position === TaskPosition.First) {
       return this.moveToFirst(taskId);
@@ -208,25 +208,25 @@ export class TaskService {
     }
 
     // TODO: better checked by parameter validation
-    if (targetTaskId === undefined) {
+    if (anchorTaskId === undefined) {
       // If no target task is specified, we cannot reorder
       throw new BadRequestException(
         'Target task ID must be provided for relative reordering (Before, After)',
       );
     }
 
-    if (taskId === targetTaskId) {
+    if (taskId === anchorTaskId) {
       return TaskMoveResult.AlreadyInPlace;
     }
 
     const task = await this.validateTask(taskId);
-    const targetTask = await this.validateTask(targetTaskId);
+    const anchorTask = await this.validateTask(anchorTaskId);
 
-    const beforeTargetTask =
-      position === TaskPosition.Before && task.order === targetTask.order - 1;
-    const afterTargetTask =
-      position === TaskPosition.After && task.order === targetTask.order + 1;
-    const alreadyInPlace = beforeTargetTask || afterTargetTask;
+    const beforeAnchorTask =
+      position === TaskPosition.Before && task.order === anchorTask.order - 1;
+    const afterAnchorTask =
+      position === TaskPosition.After && task.order === anchorTask.order + 1;
+    const alreadyInPlace = beforeAnchorTask || afterAnchorTask;
     if (alreadyInPlace) {
       return TaskMoveResult.AlreadyInPlace;
     }
@@ -240,26 +240,26 @@ export class TaskService {
     });
     const taskOrder = task.order;
     const taskIndex = tasks.findIndex((t) => t.id === taskId);
-    const targetTaskOrder = targetTask.order;
-    const targetTaskIndex = tasks.findIndex((t) => t.id === targetTaskId);
+    const anchorTaskOrder = anchorTask.order;
+    const anchorTaskIndex = tasks.findIndex((t) => t.id === anchorTaskId);
 
     let changedTasks = [] as Task[];
     let startOrder = 0;
-    if (taskOrder > targetTaskOrder) {
+    if (taskOrder > anchorTaskOrder) {
       if (position === TaskPosition.Before) {
-        changedTasks = [task, ...tasks.slice(targetTaskIndex, taskIndex)];
-        startOrder = targetTaskOrder;
+        changedTasks = [task, ...tasks.slice(anchorTaskIndex, taskIndex)];
+        startOrder = anchorTaskOrder;
       } else if (position === TaskPosition.After) {
-        changedTasks = [task, ...tasks.slice(targetTaskIndex + 1, taskIndex)];
-        startOrder = targetTaskOrder + 1;
+        changedTasks = [task, ...tasks.slice(anchorTaskIndex + 1, taskIndex)];
+        startOrder = anchorTaskOrder + 1;
       }
-    } else if (taskOrder < targetTaskOrder) {
+    } else if (taskOrder < anchorTaskOrder) {
       if (position === TaskPosition.Before) {
-        changedTasks = [...tasks.slice(taskIndex + 1, targetTaskIndex), task];
+        changedTasks = [...tasks.slice(taskIndex + 1, anchorTaskIndex), task];
         startOrder = taskOrder;
       } else if (position === TaskPosition.After) {
         changedTasks = [
-          ...tasks.slice(taskIndex + 1, targetTaskIndex + 1),
+          ...tasks.slice(taskIndex + 1, anchorTaskIndex + 1),
           task,
         ];
         startOrder = taskOrder;
