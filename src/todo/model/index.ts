@@ -5,7 +5,7 @@ export enum TaskListStatus {
 
 export enum TaskMoveResult {
   AlreadyInPlace = 'already-in-place',
-  Moved = 'moved',
+  Success = 'success',
 }
 
 export enum TaskStatus {
