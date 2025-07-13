@@ -13,6 +13,7 @@ import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskService } from '../service/TaskService';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 import { MoveTaskResult } from '../enum/MoveTaskResult';
+import { TaskReorderRequest } from '../dto/TaskReorderRequest';
 
 @Controller('tasks')
 export class TaskController {
@@ -55,6 +56,7 @@ export class TaskController {
     };
   }
 
+  // TODO: specify order
   @Post('/:id/move')
   async moveToAnotherTaskList(
     @Param('id', new ParseIntPipe({ optional: false })) taskId: number,
@@ -80,5 +82,13 @@ export class TaskController {
       default:
         throw new Error('unreachable case');
     }
+  }
+
+  @Patch('/:id/reorder')
+  reorderTask(
+    @Param('id') taskId: number,
+    @Query('position') position: TaskReorderRequest,
+  ) {
+    return this.taskService.reorderTask(taskId, position);
   }
 }

@@ -79,7 +79,6 @@ describe('TaskListController', () => {
       expect(result).toEqual({
         ...expectedTaskList,
         id: 1,
-        // TODO:
         creator: { id: mockUser.id },
       });
     });

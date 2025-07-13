@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, RelationId } from 'typeorm';
+import { Column, Entity, ManyToOne, RelationId } from 'typeorm';
 import { TraceableEntity } from '@/core/entity/TraceableEntity';
 import { TaskStatus } from '../enum/TaskStatus';
 import { TaskList } from './TaskList';
@@ -18,13 +18,18 @@ export class Task extends TraceableEntity {
   })
   status: TaskStatus;
 
+  /**
+   * optional field lazy loading strategy by default
+   */
   @ManyToOne(() => TaskList, (taskList) => taskList.tasks, {
     // task is deleted when task list is deleted
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'task_list_id' })
-  taskList: TaskList;
+  taskList?: TaskList;
 
   @RelationId((task: Task) => task.taskList)
   taskListId: number;
+
+  @Column({ default: 0 })
+  order: number;
 }
