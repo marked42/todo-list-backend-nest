@@ -11,7 +11,7 @@ import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 import { TaskPosition, TaskReorderRequest } from '../dto/TaskReorderRequest';
 import { TaskStatus } from '../enum/TaskStatus';
 import { TaskListStatus } from '../enum/TaskListStatus';
-import { MoveTaskResult, ReorderTaskResult } from '../enum/MoveTaskResult';
+import { TaskMoveResult } from '../enum/TaskMoveResult';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
 const getEntityId = (entity: { id: number }) => entity.id;
@@ -520,7 +520,7 @@ describe('TaskService', () => {
           taskId,
           anotherUserTaskList.id,
         );
-        expect(result).toEqual(MoveTaskResult.Moved);
+        expect(result).toEqual(TaskMoveResult.Moved);
 
         const task = await taskRepo.findOneBy({ id: taskId });
         if (!task) {
@@ -533,7 +533,7 @@ describe('TaskService', () => {
         const { id: taskId, taskListId } = db.firstOwnedTask;
 
         const result = await service.moveToAnotherTaskList(taskId, taskListId);
-        expect(result).toEqual(MoveTaskResult.AlreadyInList);
+        expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
       });
 
       it('should throw NotFoundException when moving a non-existent task', async () => {
@@ -583,7 +583,7 @@ describe('TaskService', () => {
             request.position = TaskPosition.First;
 
             const result = await service.reorderTask(task.id, request);
-            expect(result).toEqual(ReorderTaskResult.Moved);
+            expect(result).toEqual(TaskMoveResult.Moved);
 
             const firstTask = await taskRepo.findOne({
               where: {
@@ -606,7 +606,7 @@ describe('TaskService', () => {
             request.position = TaskPosition.First;
 
             const result = await service.reorderTask(task.id, request);
-            expect(result).toEqual(ReorderTaskResult.AlreadyInPlace);
+            expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
 
             const firstTask = await taskRepo.findOne({
               where: {
@@ -654,7 +654,7 @@ describe('TaskService', () => {
             request.position = TaskPosition.Last;
 
             const result = await service.reorderTask(task.id, request);
-            expect(result).toEqual(ReorderTaskResult.Moved);
+            expect(result).toEqual(TaskMoveResult.Moved);
 
             const lastTask = await taskRepo.findOne({
               where: {
@@ -677,7 +677,7 @@ describe('TaskService', () => {
             request.position = TaskPosition.Last;
 
             const result = await service.reorderTask(task.id, request);
-            expect(result).toEqual(ReorderTaskResult.AlreadyInPlace);
+            expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
 
             const lastTask = await taskRepo.findOne({
               where: {
@@ -755,7 +755,7 @@ describe('TaskService', () => {
             request.targetTaskId = targetTask.id;
 
             const result = await service.reorderTask(task.id, request);
-            expect(result).toEqual(ReorderTaskResult.Moved);
+            expect(result).toEqual(TaskMoveResult.Moved);
 
             await expectCorrectOrderAfterMoved(
               taskList.id,
@@ -774,7 +774,7 @@ describe('TaskService', () => {
             request.targetTaskId = targetTask.id;
 
             const result = await service.reorderTask(task.id, request);
-            expect(result).toEqual(ReorderTaskResult.Moved);
+            expect(result).toEqual(TaskMoveResult.Moved);
 
             await expectCorrectOrderAfterMoved(
               taskList.id,
@@ -792,7 +792,7 @@ describe('TaskService', () => {
             request.targetTaskId = task.id;
 
             const result = await service.reorderTask(task.id, request);
-            expect(result).toEqual(ReorderTaskResult.AlreadyInPlace);
+            expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
           });
 
           it('should do nothing when already in place (move task before its next task)', async () => {
@@ -807,7 +807,7 @@ describe('TaskService', () => {
             request.targetTaskId = nextTask.id;
 
             const result = await service.reorderTask(task.id, request);
-            expect(result).toEqual(ReorderTaskResult.AlreadyInPlace);
+            expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
           });
 
           it('should throw NotFoundException when moving non-exist task', async () => {
@@ -875,7 +875,7 @@ describe('TaskService', () => {
             request.targetTaskId = targetTask.id;
 
             const result = await service.reorderTask(task.id, request);
-            expect(result).toEqual(ReorderTaskResult.Moved);
+            expect(result).toEqual(TaskMoveResult.Moved);
 
             await expectCorrectOrderAfterMoved(
               taskList.id,
@@ -894,7 +894,7 @@ describe('TaskService', () => {
             request.targetTaskId = targetTask.id;
 
             const result = await service.reorderTask(task.id, request);
-            expect(result).toEqual(ReorderTaskResult.Moved);
+            expect(result).toEqual(TaskMoveResult.Moved);
 
             await expectCorrectOrderAfterMoved(
               taskList.id,
@@ -912,7 +912,7 @@ describe('TaskService', () => {
             request.targetTaskId = task.id;
 
             const result = await service.reorderTask(task.id, request);
-            expect(result).toEqual(ReorderTaskResult.AlreadyInPlace);
+            expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
           });
 
           it('should do nothing when already in place (move task after its previous task)', async () => {
@@ -927,7 +927,7 @@ describe('TaskService', () => {
             request.targetTaskId = previousTask.id;
 
             const result = await service.reorderTask(task.id, request);
-            expect(result).toEqual(ReorderTaskResult.AlreadyInPlace);
+            expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
           });
 
           it('should throw NotFoundException when moving non-exist task', async () => {

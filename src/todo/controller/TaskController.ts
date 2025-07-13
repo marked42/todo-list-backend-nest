@@ -12,7 +12,7 @@ import {
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskService } from '../service/TaskService';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
-import { MoveTaskResult } from '../enum/MoveTaskResult';
+import { TaskMoveResult } from '../enum/TaskMoveResult';
 import { TaskReorderRequest } from '../dto/TaskReorderRequest';
 
 @Controller('tasks')
@@ -69,12 +69,12 @@ export class TaskController {
     );
 
     switch (moved) {
-      case MoveTaskResult.AlreadyInList:
+      case TaskMoveResult.AlreadyInPlace:
         return {
           success: true,
           message: `Task with ID ${taskId} is already in task list ${taskListId}`,
         };
-      case MoveTaskResult.Moved:
+      case TaskMoveResult.Moved:
         return {
           success: true,
           message: `Task with ID ${taskId} moved to task list ${taskListId} successfully`,
