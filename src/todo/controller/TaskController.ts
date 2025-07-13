@@ -9,11 +9,11 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { TaskMoveResult } from '../model';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
-import { TaskService } from '../service/TaskService';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
-import { TaskMoveResult } from '../enum/TaskMoveResult';
 import { TaskReorderRequest } from '../dto/TaskReorderRequest';
+import { TaskService } from '../service/TaskService';
 
 @Controller('tasks')
 export class TaskController {

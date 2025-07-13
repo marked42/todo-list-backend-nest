@@ -1,18 +1,16 @@
 import { DataSource, Repository } from 'typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { User } from '@/core/entity/User';
-import { CURRENT_USER } from '@/auth/const';
+import { CURRENT_USER } from '@/auth/model';
 import { TaskService } from './TaskService';
 import { TaskList } from '../entity/TaskList';
 import { Task } from '../entity/Task';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 import { TaskPosition, TaskReorderRequest } from '../dto/TaskReorderRequest';
-import { TaskStatus } from '../enum/TaskStatus';
-import { TaskListStatus } from '../enum/TaskListStatus';
-import { TaskMoveResult } from '../enum/TaskMoveResult';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { TaskListStatus, TaskMoveResult, TaskStatus } from '../model';
 
 const getEntityId = (entity: { id: number }) => entity.id;
 

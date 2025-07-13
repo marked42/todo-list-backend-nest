@@ -1,7 +1,7 @@
 import { Global, Module, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
-import { CURRENT_USER } from './const';
+import { CURRENT_USER } from './model';
 
 @Global()
 @Module({
