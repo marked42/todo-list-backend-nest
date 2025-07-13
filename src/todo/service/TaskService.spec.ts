@@ -11,6 +11,7 @@ import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 import { TaskPosition, TaskReorderRequest } from '../dto/TaskReorderRequest';
 import { TaskListStatus, TaskMoveResult, TaskStatus } from '../model';
+import { TaskMoveRequest } from '../dto/TaskMoveRequest';
 
 const getEntityId = (entity: { id: number }) => entity.id;
 
@@ -514,10 +515,10 @@ describe('TaskService', () => {
           throw new Error('user has no another task list');
         }
 
-        const result = await service.moveToAnotherTaskList(
-          taskId,
-          anotherUserTaskList.id,
-        );
+        const request = new TaskMoveRequest();
+        request.taskListId = anotherUserTaskList.id;
+
+        const result = await service.moveToAnotherTaskList(taskId, request);
         expect(result).toEqual(TaskMoveResult.Moved);
 
         const task = await taskRepo.findOneBy({ id: taskId });
@@ -529,24 +530,28 @@ describe('TaskService', () => {
 
       it('should not move a task if it is already in the target task list', async () => {
         const { id: taskId, taskListId } = db.firstOwnedTask;
+        const request = new TaskMoveRequest();
+        request.taskListId = taskListId;
 
-        const result = await service.moveToAnotherTaskList(taskId, taskListId);
+        const result = await service.moveToAnotherTaskList(taskId, request);
         expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
       });
 
       it('should throw NotFoundException when moving a non-existent task', async () => {
         const taskId = -1;
-        const newTaskListId = 3;
+        const request = new TaskMoveRequest();
+        request.taskListId = 3;
         await expect(
-          service.moveToAnotherTaskList(taskId, newTaskListId),
+          service.moveToAnotherTaskList(taskId, request),
         ).rejects.toThrow(`Task with ID ${taskId} not found`);
       });
 
       it('should throw ForbiddenException when moving a task not owned by user', async () => {
         const { id: taskId } = db.firstUnownedTask;
-        const newTaskListId = -1;
+        const request = new TaskMoveRequest();
+        request.taskListId = -1;
         await expect(
-          service.moveToAnotherTaskList(taskId, newTaskListId),
+          service.moveToAnotherTaskList(taskId, request),
         ).rejects.toThrow(
           `Task with ID ${taskId} not owned by user ${mockCurrentUser.id}`,
         );
@@ -554,19 +559,21 @@ describe('TaskService', () => {
 
       it('should throw NotFoundException when moving to a non-existent task list', async () => {
         const { id: taskId } = db.firstOwnedTask;
-        const newTaskListId = -1;
+        const request = new TaskMoveRequest();
+        request.taskListId = -1;
         await expect(
-          service.moveToAnotherTaskList(taskId, newTaskListId),
-        ).rejects.toThrow(`Task list with ID ${newTaskListId} not found`);
+          service.moveToAnotherTaskList(taskId, request),
+        ).rejects.toThrow(`Task list with ID ${request.taskListId} not found`);
       });
 
       it('should throw ForbiddenException when moving to a task list not owned by user', async () => {
         const { id: taskId } = db.firstOwnedTask;
-        const { id: newTaskListId } = db.firstUnownedTaskList;
+        const request = new TaskMoveRequest();
+        request.taskListId = db.firstUnownedTaskList.id;
         await expect(
-          service.moveToAnotherTaskList(taskId, newTaskListId),
+          service.moveToAnotherTaskList(taskId, request),
         ).rejects.toThrow(
-          `Task list with ID ${newTaskListId} not owned by user ${mockCurrentUser.id}`,
+          `Task list with ID ${request.taskListId} not owned by user ${mockCurrentUser.id}`,
         );
       });
     });
@@ -750,7 +757,7 @@ describe('TaskService', () => {
 
             const request = new TaskReorderRequest();
             request.position = TaskPosition.Before;
-            request.targetTaskId = targetTask.id;
+            request.taskId = targetTask.id;
 
             const result = await service.reorderTask(task.id, request);
             expect(result).toEqual(TaskMoveResult.Moved);
@@ -769,7 +776,7 @@ describe('TaskService', () => {
 
             const request = new TaskReorderRequest();
             request.position = TaskPosition.Before;
-            request.targetTaskId = targetTask.id;
+            request.taskId = targetTask.id;
 
             const result = await service.reorderTask(task.id, request);
             expect(result).toEqual(TaskMoveResult.Moved);
@@ -787,7 +794,7 @@ describe('TaskService', () => {
             const request = new TaskReorderRequest();
             request.position = TaskPosition.Before;
             // same task
-            request.targetTaskId = task.id;
+            request.taskId = task.id;
 
             const result = await service.reorderTask(task.id, request);
             expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
@@ -802,7 +809,7 @@ describe('TaskService', () => {
             const request = new TaskReorderRequest();
             request.position = TaskPosition.Before;
             // same task
-            request.targetTaskId = nextTask.id;
+            request.taskId = nextTask.id;
 
             const result = await service.reorderTask(task.id, request);
             expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
@@ -813,7 +820,7 @@ describe('TaskService', () => {
             const targetTask = db.firstOwnedTask;
             const request = new TaskReorderRequest();
             request.position = TaskPosition.Before;
-            request.targetTaskId = targetTask.id;
+            request.taskId = targetTask.id;
 
             await expect(
               service.reorderTask(nonExistId, request),
@@ -826,7 +833,7 @@ describe('TaskService', () => {
             const task = db.firstUnownedTask;
             const request = new TaskReorderRequest();
             request.position = TaskPosition.Before;
-            request.targetTaskId = db.firstOwnedTask.id;
+            request.taskId = db.firstOwnedTask.id;
 
             await expect(service.reorderTask(task.id, request)).rejects.toThrow(
               new ForbiddenException(
@@ -841,7 +848,7 @@ describe('TaskService', () => {
             const nonExistId = -1;
             const request = new TaskReorderRequest();
             request.position = TaskPosition.Before;
-            request.targetTaskId = nonExistId;
+            request.taskId = nonExistId;
 
             await expect(service.reorderTask(taskId, request)).rejects.toThrow(
               new NotFoundException(`Task with ID ${nonExistId} not found`),
@@ -852,11 +859,11 @@ describe('TaskService', () => {
             const task = db.firstOwnedTask;
             const request = new TaskReorderRequest();
             request.position = TaskPosition.Before;
-            request.targetTaskId = db.firstUnownedTask.id;
+            request.taskId = db.firstUnownedTask.id;
 
             await expect(service.reorderTask(task.id, request)).rejects.toThrow(
               new ForbiddenException(
-                `Task with ID ${request.targetTaskId} not owned by user ${mockCurrentUser.id}`,
+                `Task with ID ${request.taskId} not owned by user ${mockCurrentUser.id}`,
               ),
             );
           });
@@ -870,7 +877,7 @@ describe('TaskService', () => {
 
             const request = new TaskReorderRequest();
             request.position = TaskPosition.After;
-            request.targetTaskId = targetTask.id;
+            request.taskId = targetTask.id;
 
             const result = await service.reorderTask(task.id, request);
             expect(result).toEqual(TaskMoveResult.Moved);
@@ -889,7 +896,7 @@ describe('TaskService', () => {
 
             const request = new TaskReorderRequest();
             request.position = TaskPosition.After;
-            request.targetTaskId = targetTask.id;
+            request.taskId = targetTask.id;
 
             const result = await service.reorderTask(task.id, request);
             expect(result).toEqual(TaskMoveResult.Moved);
@@ -907,7 +914,7 @@ describe('TaskService', () => {
             const request = new TaskReorderRequest();
             request.position = TaskPosition.After;
             // same task
-            request.targetTaskId = task.id;
+            request.taskId = task.id;
 
             const result = await service.reorderTask(task.id, request);
             expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
@@ -922,7 +929,7 @@ describe('TaskService', () => {
             const request = new TaskReorderRequest();
             request.position = TaskPosition.After;
             // same task
-            request.targetTaskId = previousTask.id;
+            request.taskId = previousTask.id;
 
             const result = await service.reorderTask(task.id, request);
             expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
@@ -933,7 +940,7 @@ describe('TaskService', () => {
             const targetTask = db.firstOwnedTask;
             const request = new TaskReorderRequest();
             request.position = TaskPosition.After;
-            request.targetTaskId = targetTask.id;
+            request.taskId = targetTask.id;
 
             await expect(
               service.reorderTask(nonExistId, request),
@@ -946,7 +953,7 @@ describe('TaskService', () => {
             const task = db.firstUnownedTask;
             const request = new TaskReorderRequest();
             request.position = TaskPosition.After;
-            request.targetTaskId = db.firstOwnedTask.id;
+            request.taskId = db.firstOwnedTask.id;
 
             await expect(service.reorderTask(task.id, request)).rejects.toThrow(
               new ForbiddenException(
@@ -961,7 +968,7 @@ describe('TaskService', () => {
             const nonExistId = -1;
             const request = new TaskReorderRequest();
             request.position = TaskPosition.After;
-            request.targetTaskId = nonExistId;
+            request.taskId = nonExistId;
 
             await expect(service.reorderTask(taskId, request)).rejects.toThrow(
               new NotFoundException(`Task with ID ${nonExistId} not found`),
@@ -972,11 +979,11 @@ describe('TaskService', () => {
             const task = db.firstOwnedTask;
             const request = new TaskReorderRequest();
             request.position = TaskPosition.After;
-            request.targetTaskId = db.firstUnownedTask.id;
+            request.taskId = db.firstUnownedTask.id;
 
             await expect(service.reorderTask(task.id, request)).rejects.toThrow(
               new ForbiddenException(
-                `Task with ID ${request.targetTaskId} not owned by user ${mockCurrentUser.id}`,
+                `Task with ID ${request.taskId} not owned by user ${mockCurrentUser.id}`,
               ),
             );
           });

@@ -17,6 +17,7 @@ import { CURRENT_USER } from '@/auth/model';
 import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
 import { TaskMoveResult } from '../model';
 import { TaskPosition, TaskReorderRequest } from '../dto/TaskReorderRequest';
+import { TaskMoveRequest } from '../dto/TaskMoveRequest';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TaskService {
@@ -136,12 +137,12 @@ export class TaskService {
     return this.taskRepo.save(task);
   }
 
-  async moveToAnotherTaskList(taskId: number, targetTaskListId: number) {
+  async moveToAnotherTaskList(taskId: number, request: TaskMoveRequest) {
     const task = await this.validateTask(taskId);
-    if (task.taskListId === targetTaskListId) {
+    if (task.taskListId === request.taskListId) {
       return TaskMoveResult.AlreadyInPlace;
     }
-    const targetTaskList = await this.validateTaskList(targetTaskListId);
+    const targetTaskList = await this.validateTaskList(request.taskListId);
 
     task.taskList = targetTaskList;
     // TODO: default task order
@@ -196,7 +197,7 @@ export class TaskService {
   }
 
   async reorderTask(taskId: number, request: TaskReorderRequest) {
-    const { position, targetTaskId } = request;
+    const { position, taskId: targetTaskId } = request;
 
     if (position === TaskPosition.First) {
       return this.moveToFirst(taskId);

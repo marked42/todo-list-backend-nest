@@ -13,6 +13,7 @@ import { TaskMoveResult } from '../model';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 import { TaskReorderRequest } from '../dto/TaskReorderRequest';
+import { TaskMoveRequest } from '../dto/TaskMoveRequest';
 import { TaskService } from '../service/TaskService';
 
 @Controller('tasks')
@@ -60,24 +61,20 @@ export class TaskController {
   @Post('/:id/move')
   async moveToAnotherTaskList(
     @Param('id', new ParseIntPipe({ optional: false })) taskId: number,
-    @Query('taskListId', new ParseIntPipe({ optional: false }))
-    taskListId: number,
+    @Body() request: TaskMoveRequest,
   ) {
-    const moved = await this.taskService.moveToAnotherTaskList(
-      taskId,
-      taskListId,
-    );
+    const moved = await this.taskService.moveToAnotherTaskList(taskId, request);
 
     switch (moved) {
       case TaskMoveResult.AlreadyInPlace:
         return {
           success: true,
-          message: `Task with ID ${taskId} is already in task list ${taskListId}`,
+          message: `Task with ID ${taskId} is already in task list ${request.taskListId}`,
         };
       case TaskMoveResult.Moved:
         return {
           success: true,
-          message: `Task with ID ${taskId} moved to task list ${taskListId} successfully`,
+          message: `Task with ID ${taskId} moved to task list ${request.taskListId} successfully`,
         };
       default:
         throw new Error('unreachable case');
