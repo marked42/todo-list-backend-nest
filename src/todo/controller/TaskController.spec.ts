@@ -4,7 +4,7 @@ import { TaskService } from '../service/TaskService';
 import { Task } from '../entity/Task';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { User } from '@/core/entity/User';
-import { MoveTaskResult } from '../enum/MoveTaskResult';
+import { TaskMoveResult } from '../enum/TaskMoveResult';
 
 describe('TaskController', () => {
   let controller: TaskController;
@@ -174,7 +174,7 @@ describe('TaskController', () => {
 
       const moveTaskSpy = jest
         .spyOn(taskService, 'moveToAnotherTaskList')
-        .mockResolvedValue(MoveTaskResult.Moved);
+        .mockResolvedValue(TaskMoveResult.Moved);
 
       const result = await controller.moveToAnotherTaskList(
         taskId,
@@ -193,7 +193,7 @@ describe('TaskController', () => {
 
       jest
         .spyOn(taskService, 'moveToAnotherTaskList')
-        .mockResolvedValue(MoveTaskResult.AlreadyInList);
+        .mockResolvedValue(TaskMoveResult.AlreadyInPlace);
 
       const result = await controller.moveToAnotherTaskList(
         taskId,

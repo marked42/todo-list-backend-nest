@@ -15,7 +15,7 @@ import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 import { CURRENT_USER } from '@/auth/const';
 import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
-import { MoveTaskResult, ReorderTaskResult } from '../enum/MoveTaskResult';
+import { TaskMoveResult } from '../enum/TaskMoveResult';
 import { TaskPosition, TaskReorderRequest } from '../dto/TaskReorderRequest';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -139,14 +139,14 @@ export class TaskService {
   async moveToAnotherTaskList(taskId: number, targetTaskListId: number) {
     const task = await this.validateTask(taskId);
     if (task.taskListId === targetTaskListId) {
-      return MoveTaskResult.AlreadyInList;
+      return TaskMoveResult.AlreadyInPlace;
     }
     const targetTaskList = await this.validateTaskList(targetTaskListId);
 
     task.taskList = targetTaskList;
     // TODO: default task order
     await this.taskRepo.save(task);
-    return MoveTaskResult.Moved;
+    return TaskMoveResult.Moved;
   }
 
   private async moveToFirst(taskId: number) {
@@ -161,7 +161,7 @@ export class TaskService {
     });
 
     if (firstTask?.id === taskId) {
-      return ReorderTaskResult.AlreadyInPlace;
+      return TaskMoveResult.AlreadyInPlace;
     }
 
     // TODO: may underflow
@@ -169,7 +169,7 @@ export class TaskService {
     task.order = newOrder;
 
     await this.taskRepo.save(task);
-    return ReorderTaskResult.Moved;
+    return TaskMoveResult.Moved;
   }
 
   private async moveToLast(taskId: number) {
@@ -184,7 +184,7 @@ export class TaskService {
     });
 
     if (lastTask?.id === taskId) {
-      return ReorderTaskResult.AlreadyInPlace;
+      return TaskMoveResult.AlreadyInPlace;
     }
 
     // TODO: may overflow
@@ -192,7 +192,7 @@ export class TaskService {
     task.order = newOrder;
 
     await this.taskRepo.save(task);
-    return ReorderTaskResult.Moved;
+    return TaskMoveResult.Moved;
   }
 
   async reorderTask(taskId: number, request: TaskReorderRequest) {
@@ -215,7 +215,7 @@ export class TaskService {
     }
 
     if (taskId === targetTaskId) {
-      return ReorderTaskResult.AlreadyInPlace;
+      return TaskMoveResult.AlreadyInPlace;
     }
 
     const task = await this.validateTask(taskId);
@@ -227,7 +227,7 @@ export class TaskService {
       position === TaskPosition.After && task.order === targetTask.order + 1;
     const alreadyInPlace = beforeTargetTask || afterTargetTask;
     if (alreadyInPlace) {
-      return ReorderTaskResult.AlreadyInPlace;
+      return TaskMoveResult.AlreadyInPlace;
     }
 
     const tasks = await this.taskRepo.find({
@@ -272,7 +272,7 @@ export class TaskService {
     });
 
     await this.taskRepo.save(changedTasks);
-    return ReorderTaskResult.Moved;
+    return TaskMoveResult.Moved;
   }
 
   private async findTaskOrThrow(taskId: number) {
