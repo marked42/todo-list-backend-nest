@@ -6,6 +6,8 @@ import { TaskService } from '../service/TaskService';
 import { Task } from '../entity/Task';
 import { TaskMoveResult } from '../model';
 import { TaskMoveRequest } from '../dto/TaskMoveRequest';
+import { Repository } from 'typeorm';
+import { TaskList } from '../entity/TaskList';
 
 describe('TaskController', () => {
   let controller: TaskController;
@@ -19,15 +21,11 @@ describe('TaskController', () => {
       providers: [
         {
           provide: TaskService,
-          useValue: {
-            createTask: jest.fn(),
-            deleteTask: jest.fn(),
-            renameTask: jest.fn(),
-            getTasksByListId: jest.fn(),
-            updateTask: jest.fn(),
-            moveTask: jest.fn(),
-            user: mockUser,
-          },
+          useValue: new TaskService(
+            {} as Repository<TaskList>,
+            {} as Repository<Task>,
+            mockUser,
+          ),
         },
       ],
     }).compile();
