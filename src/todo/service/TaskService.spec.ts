@@ -521,11 +521,21 @@ describe('TaskService', () => {
         const result = await service.moveTask(taskId, request);
         expect(result).toEqual(TaskMoveResult.Success);
 
-        const task = await taskRepo.findOneBy({ id: taskId });
-        if (!task) {
-          throw new Error('task not found');
+        const lastTask = await taskRepo.findOne({
+          where: {
+            taskList: { id: request.taskListId },
+            creator: { id: mockCurrentUser.id },
+          },
+          order: {
+            order: 'DESC',
+          },
+        });
+        if (!lastTask) {
+          throw new Error('last task not found');
         }
-        expect(task.taskListId).toEqual(anotherUserTaskList.id);
+
+        expect(lastTask.id).toEqual(taskId);
+        expect(lastTask.taskListId).toEqual(anotherUserTaskList.id);
       });
 
       it('should not move a task if it is already in the target task list', async () => {
