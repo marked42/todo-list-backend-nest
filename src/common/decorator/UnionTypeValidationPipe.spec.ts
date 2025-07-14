@@ -86,13 +86,11 @@ describe('UnionTypeValidationPipe', () => {
   });
 
   describe('edge cases', () => {
-    it('should handle empty types array', async () => {
+    it('should handle empty types array', () => {
       try {
         new UnionTypeValidationPipe([]);
       } catch (e) {
-        await expect(e).toEqual(
-          new Error(`At least one type must be provided`),
-        );
+        expect(e).toEqual(new Error(`At least one type must be provided`));
       }
     });
     it('should handle null value', async () => {
