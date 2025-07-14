@@ -1,6 +1,6 @@
 import { Column, Entity, JoinTable, OneToMany } from 'typeorm';
-import { Role } from './Role';
-import { BaseEntity } from './BaseEntity';
+import { BaseEntity } from '@/common/entity/BaseEntity';
+import { Role } from '@/user/entity/Role';
 
 @Entity()
 export class User extends BaseEntity {
@@ -30,9 +30,4 @@ export class User extends BaseEntity {
     default: true,
   })
   enabled: boolean;
-}
-
-export class RequestUser {
-  id: number;
-  name: string;
 }

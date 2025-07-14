@@ -2,7 +2,7 @@ import { DataSource, Repository } from 'typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { User } from '@/core/entity/User';
+import { User } from '@/user/entity/User';
 import { CURRENT_USER } from '@/auth/model';
 import { TaskService } from './TaskService';
 import { TaskList } from '../entity/TaskList';
@@ -131,7 +131,11 @@ describe('TaskService', () => {
         TypeOrmModule.forRoot({
           type: 'better-sqlite3',
           database: ':memory:',
-          entities: ['src/todo/entity/*.ts', 'src/core/entity/*.ts'],
+          entities: [
+            'src/todo/entity/*.ts',
+            'src/core/entity/*.ts',
+            'src/user/entity/*.ts',
+          ],
           synchronize: true,
           dropSchema: true,
         }),

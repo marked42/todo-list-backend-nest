@@ -9,6 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { UnionTypeValidationPipe } from '@/common/decorator/UnionTypeValidationPipe';
 import { TaskMoveResult } from '../model';
 import { CreateTaskDto } from '../dto/CreateTaskDto';
 import { UpdateTaskDto } from '../dto/UpdateTaskDto';
@@ -16,7 +17,6 @@ import { ReorderTaskDto, ReorderTaskDtoClasses } from '../dto/ReorderTaskDto';
 import { MoveTaskDto, MoveTaskDtoClasses } from '../dto/MoveTaskDto';
 import { TaskService } from '../service/TaskService';
 import { QueryTaskDto } from '../dto/QueryTaskDto';
-import { UnionTypeValidationPipe } from '@/common/decorator/UnionTypeValidationPipe';
 
 @Controller('tasks')
 export class TaskController {

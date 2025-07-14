@@ -1,14 +1,13 @@
+import { Request } from 'express';
 import {
   createParamDecorator,
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
-import { RequestUser } from '../entity/User';
-import { Request } from 'express';
+import { RequestUser } from '../model';
 
 export type UserPayload = RequestUser;
 
-// TODO: move to auth module
 export const CurrentUser = createParamDecorator(
   (data: keyof UserPayload, ctx: ExecutionContext) => {
     // Assuming the user is stored in the request object

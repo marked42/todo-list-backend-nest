@@ -7,12 +7,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '@/core/entity/User';
+import { User } from '@/user/entity/User';
+import { CURRENT_USER } from '@/auth/model';
 import { TaskList } from '../entity/TaskList';
 import { Task } from '../entity/Task';
 import { CreateTaskDto } from '../dto/CreateTaskDto';
 import { UpdateTaskDto } from '../dto/UpdateTaskDto';
-import { CURRENT_USER } from '@/auth/model';
 import { CreateTaskListDto } from '../dto/CreateTaskListDto';
 import { TaskMoveResult, TaskPosition } from '../model';
 import { ReorderTaskDto } from '../dto/ReorderTaskDto';

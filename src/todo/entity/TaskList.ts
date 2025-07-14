@@ -1,5 +1,5 @@
 import { Column, Entity, OneToMany } from 'typeorm';
-import { TraceableEntity } from '@/core/entity/TraceableEntity';
+import { TraceableEntity } from '@/common/entity/TraceableEntity';
 import { TaskListStatus } from '../model';
 import { Task } from './Task';
 

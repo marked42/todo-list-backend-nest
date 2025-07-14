@@ -1,3 +1,4 @@
+import { Request } from 'express';
 import {
   CanActivate,
   ExecutionContext,
@@ -5,9 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
-import { TOKEN_PREFIX } from '../model';
-import { RequestUser } from '../entity/User';
+import { TOKEN_PREFIX, RequestUser } from '../model';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -16,7 +15,7 @@ export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();
 
-    // 白名单
+    // 白名单 TODO: isPublic
     if (['/tokens', '/users'].includes(request.url)) {
       return true;
     }
