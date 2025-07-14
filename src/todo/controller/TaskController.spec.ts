@@ -3,13 +3,14 @@ import { NotFoundException } from '@nestjs/common';
 import { TaskController } from './TaskController';
 import { TaskService } from '../service/TaskService';
 import { Task } from '../entity/Task';
-import { TaskMoveResult } from '../model';
+import { TaskMoveResult, TaskPosition } from '../model';
 import {
   AbsoluteMoveRequest,
   RelativeMoveRequest,
 } from '../dto/TaskMoveRequest';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
+import { AbsoluteReorderRequest } from '../dto/TaskReorderRequest';
 
 describe('TaskController', () => {
   let controller: TaskController;
@@ -198,6 +199,59 @@ describe('TaskController', () => {
         `Task with ID ${taskId} not found`,
       );
       expect(moveTaskSpy).toHaveBeenCalledWith(taskId, request);
+    });
+  });
+
+  describe('reorderTask', () => {
+    it('should reorder a task', async () => {
+      const taskId = 1;
+
+      const reorderTaskSpy = jest
+        .spyOn(taskService, 'reorderTask')
+        .mockResolvedValue(TaskMoveResult.Success);
+      const request = new AbsoluteReorderRequest();
+      request.position = TaskPosition.First;
+
+      const result = await controller.reorderTask(taskId, request);
+      expect(reorderTaskSpy).toHaveBeenCalledWith(taskId, request);
+      expect(result).toEqual({
+        success: true,
+        message: `Task with ID ${taskId} reordered successfully`,
+      });
+    });
+
+    it('should return successfully if task is already in place', async () => {
+      const taskId = 1;
+      const request = new AbsoluteReorderRequest();
+      request.position = TaskPosition.First;
+
+      const reorderTaskSpy = jest
+        .spyOn(taskService, 'reorderTask')
+        .mockResolvedValue(TaskMoveResult.AlreadyInPlace);
+
+      const result = await controller.reorderTask(taskId, request);
+      expect(reorderTaskSpy).toHaveBeenCalledWith(taskId, request);
+      expect(result).toEqual({
+        success: true,
+        message: `Task with ID ${taskId} is already in place.`,
+      });
+    });
+
+    it('should propagate exception if failed', async () => {
+      const taskId = -1;
+      const request = new AbsoluteReorderRequest();
+      request.position = TaskPosition.First;
+
+      const reorderTaskSpy = jest
+        .spyOn(taskService, 'reorderTask')
+        .mockRejectedValue(
+          new NotFoundException(`Task with ID ${taskId} not found`),
+        );
+
+      await expect(controller.reorderTask(taskId, request)).rejects.toThrow(
+        `Task with ID ${taskId} not found`,
+      );
+      expect(reorderTaskSpy).toHaveBeenCalledWith(taskId, request);
     });
   });
 });

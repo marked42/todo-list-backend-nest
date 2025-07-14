@@ -85,12 +85,26 @@ export class TaskController {
   }
 
   @Patch('/:id/reorder')
-  reorderTask(
+  async reorderTask(
     @Param('id') taskId: number,
     @Body(new UnionTypeValidationPipe(TaskReorderRequests))
     request: TaskReorderRequest,
   ) {
-    // TODO: same as moveTask
-    return this.taskService.reorderTask(taskId, request);
+    const moved = await this.taskService.reorderTask(taskId, request);
+
+    switch (moved) {
+      case TaskMoveResult.AlreadyInPlace:
+        return {
+          success: true,
+          message: `Task with ID ${taskId} is already in place.`,
+        };
+      case TaskMoveResult.Success:
+        return {
+          success: true,
+          message: `Task with ID ${taskId} reordered successfully`,
+        };
+      default:
+        throw new Error('unreachable case');
+    }
   }
 }
