@@ -1,5 +1,5 @@
 import { Entity, ManyToOne, ManyToMany, RelationId } from 'typeorm';
-import { User } from './User';
+import { User } from '@/user/entity/User';
 import { BaseEntity } from './BaseEntity';
 
 @Entity()
