@@ -10,14 +10,14 @@ import { Repository } from 'typeorm';
 import { User } from '@/core/entity/User';
 import { TaskList } from '../entity/TaskList';
 import { Task } from '../entity/Task';
-import { TaskCreateRequest } from '../dto/TaskCreateRequest';
-import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
+import { CreateTaskDto } from '../dto/CreateTaskDto';
+import { UpdateTaskDto } from '../dto/UpdateTaskDto';
 import { CURRENT_USER } from '@/auth/model';
-import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
+import { CreateTaskListDto } from '../dto/CreateTaskListDto';
 import { TaskMoveResult, TaskPosition } from '../model';
-import { TaskReorderRequest } from '../dto/TaskReorderRequest';
-import { TaskMoveRequest } from '../dto/TaskMoveRequest';
-import { DEFAULT_TASK_ORDER, TaskQueryParam } from '../dto/TaskQueryParam';
+import { ReorderTaskDto } from '../dto/ReorderTaskDto';
+import { MoveTaskDto } from '../dto/MoveTaskDto';
+import { DEFAULT_TASK_ORDER, QueryTaskDto } from '../dto/QueryTaskDto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TaskService {
@@ -38,7 +38,7 @@ export class TaskService {
     return result;
   }
 
-  async createTaskList(request: TaskListCreateRequest) {
+  async createTaskList(request: CreateTaskListDto) {
     const taskList = this.taskListRepo.create({
       name: request.name,
       creator: { id: this.userId },
@@ -83,7 +83,7 @@ export class TaskService {
     return taskList;
   }
 
-  async getTasks(param?: TaskQueryParam) {
+  async getTasks(param?: QueryTaskDto) {
     const { taskListId, order = DEFAULT_TASK_ORDER } = param || {};
     // TODO: get other user's tasks with permission checking
     if (taskListId) {
@@ -97,7 +97,7 @@ export class TaskService {
     return tasks;
   }
 
-  async createTask(request: TaskCreateRequest) {
+  async createTask(request: CreateTaskDto) {
     await this.validateTaskList(request.taskListId);
 
     const lastTask = await this.taskRepo.findOne({
@@ -126,7 +126,7 @@ export class TaskService {
     return this.taskRepo.delete(taskId);
   }
 
-  async updateTask(taskId: number, updateData: TaskUpdateRequest) {
+  async updateTask(taskId: number, updateData: UpdateTaskDto) {
     const task = await this.validateTask(taskId);
 
     // Update only the fields that are provided in updateData
@@ -138,7 +138,7 @@ export class TaskService {
   /**
    * move task to another task list
    */
-  async moveTask(taskId: number, request: TaskMoveRequest) {
+  async moveTask(taskId: number, request: MoveTaskDto) {
     const task = await this.validateTask(taskId);
     if (task.taskListId === request.taskListId) {
       return TaskMoveResult.AlreadyInPlace;
@@ -212,7 +212,7 @@ export class TaskService {
   /**
    * reorder task to different position in same task list
    */
-  async reorderTask(taskId: number, request: TaskReorderRequest) {
+  async reorderTask(taskId: number, request: ReorderTaskDto) {
     // TODO: refactor to template method
     if (request.position === TaskPosition.First) {
       return this.reorderToFirst(taskId);

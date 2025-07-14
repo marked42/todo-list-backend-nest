@@ -1,7 +1,7 @@
 import { IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { TaskOrder } from '../model';
 
-export class TaskQueryParam {
+export class QueryTaskDto {
   @IsNumber()
   @IsOptional()
   taskListId?: number;

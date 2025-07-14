@@ -6,7 +6,7 @@ import {
   RelativePositions,
 } from '../model';
 
-export class RelativeReorderRequest {
+export class RelativeReorderTaskDto {
   @IsNotEmpty()
   @IsIn(RelativePositions, {
     message: `Relative position must be one of: ${RelativePositions.join(', ')}`,
@@ -17,7 +17,7 @@ export class RelativeReorderRequest {
   anchorTaskId: number;
 }
 
-export class AbsoluteReorderRequest {
+export class AbsoluteReorderTaskDto {
   @IsNotEmpty()
   @IsEnum(AbsolutePositions, {
     message: `Absolute position must be one of: ${AbsolutePositions.join(', ')}`,
@@ -25,11 +25,11 @@ export class AbsoluteReorderRequest {
   position: AbsolutePosition;
 }
 
-export const TaskReorderRequests = [
-  RelativeReorderRequest,
-  AbsoluteReorderRequest,
+export const ReorderTaskDtoClasses = [
+  RelativeReorderTaskDto,
+  AbsoluteReorderTaskDto,
 ];
 
-export type TaskReorderRequest = InstanceType<
-  (typeof TaskReorderRequests)[number]
+export type ReorderTaskDto = InstanceType<
+  (typeof ReorderTaskDtoClasses)[number]
 >;

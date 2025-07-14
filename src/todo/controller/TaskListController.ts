@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { TaskService } from '../service/TaskService';
-import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
+import { CreateTaskListDto } from '../dto/CreateTaskListDto';
 
 @Controller('/task-lists')
 export class TaskListController {
@@ -22,7 +22,7 @@ export class TaskListController {
   }
 
   @Post()
-  createTaskList(@Body() request: TaskListCreateRequest) {
+  createTaskList(@Body() request: CreateTaskListDto) {
     return this.taskService.createTaskList(request);
   }
 

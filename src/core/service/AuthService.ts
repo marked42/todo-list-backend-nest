@@ -3,7 +3,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { TokenCreateRequest } from '../dto/TokenCreateRequest';
+import { CreateTokenDto } from '../dto/CreateTokenDto';
 import { UserService } from './UserService';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -15,7 +15,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async createToken(request: TokenCreateRequest) {
+  async createToken(request: CreateTokenDto) {
     // 1. 查看用户是否存在
     const user = await this.userService.findByUserName(request.username);
 
