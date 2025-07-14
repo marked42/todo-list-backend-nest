@@ -4,7 +4,10 @@ import { TaskController } from './TaskController';
 import { TaskService } from '../service/TaskService';
 import { Task } from '../entity/Task';
 import { TaskMoveResult } from '../model';
-import { TaskMoveRequest } from '../dto/TaskMoveRequest';
+import {
+  AbsoluteMoveRequest,
+  RelativeMoveRequest,
+} from '../dto/TaskMoveRequest';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 
@@ -151,7 +154,7 @@ describe('TaskController', () => {
       const moveTaskSpy = jest
         .spyOn(taskService, 'moveTask')
         .mockResolvedValue(TaskMoveResult.Success);
-      const request = new TaskMoveRequest();
+      const request = new AbsoluteMoveRequest();
       request.taskListId = 3;
 
       const result = await controller.moveTask(taskId, request);
@@ -164,7 +167,7 @@ describe('TaskController', () => {
 
     it('should return successfully if task is already in the target task list', async () => {
       const taskId = 1;
-      const request = new TaskMoveRequest();
+      const request = new AbsoluteMoveRequest();
       // Same as current task list id
       request.taskListId = 1;
 
@@ -182,7 +185,7 @@ describe('TaskController', () => {
 
     it('should propagate exception if failed', async () => {
       const taskId = -1;
-      const request = new TaskMoveRequest();
+      const request = new AbsoluteMoveRequest();
       request.taskListId = 3;
 
       const moveTaskSpy = jest

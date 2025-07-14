@@ -12,10 +12,14 @@ import {
 import { TaskMoveResult } from '../model';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
-import { TaskReorderRequest } from '../dto/TaskReorderRequest';
-import { TaskMoveRequest } from '../dto/TaskMoveRequest';
+import {
+  TaskReorderRequest,
+  TaskReorderRequests,
+} from '../dto/TaskReorderRequest';
+import { TaskMoveRequest, TaskMoveRequests } from '../dto/TaskMoveRequest';
 import { TaskService } from '../service/TaskService';
 import { TaskQueryParam } from '../dto/TaskQueryParam';
+import { UnionTypeValidationPipe } from '@/common/decorator/UnionTypeValidationPipe';
 
 @Controller('tasks')
 export class TaskController {
@@ -59,7 +63,8 @@ export class TaskController {
   @Post('/:id/move')
   async moveTask(
     @Param('id', new ParseIntPipe({ optional: false })) taskId: number,
-    @Body() request: TaskMoveRequest,
+    @Body(new UnionTypeValidationPipe(TaskMoveRequests))
+    request: TaskMoveRequest,
   ) {
     const moved = await this.taskService.moveTask(taskId, request);
 
@@ -82,8 +87,10 @@ export class TaskController {
   @Patch('/:id/reorder')
   reorderTask(
     @Param('id') taskId: number,
-    @Query('position') position: TaskReorderRequest,
+    @Body(new UnionTypeValidationPipe(TaskReorderRequests))
+    request: TaskReorderRequest,
   ) {
-    return this.taskService.reorderTask(taskId, position);
+    // TODO: same as moveTask
+    return this.taskService.reorderTask(taskId, request);
   }
 }
