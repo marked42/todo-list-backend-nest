@@ -7,7 +7,7 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Post()
-  create(@Body() userCreateRequest: CreateUserDto) {
-    return this.userService.create(userCreateRequest);
+  create(@Body() dto: CreateUserDto) {
+    return this.userService.create(dto);
   }
 }

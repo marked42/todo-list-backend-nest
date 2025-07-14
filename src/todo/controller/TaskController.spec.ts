@@ -35,15 +35,15 @@ describe('TaskController', () => {
   describe('createTask', () => {
     it('should create a task', async () => {
       const taskListId = 1;
-      const request = new CreateTaskDto();
-      request.name = 'New Task';
-      request.content = '';
-      request.taskListId = taskListId;
+      const dto = new CreateTaskDto();
+      dto.name = 'New Task';
+      dto.content = '';
+      dto.taskListId = taskListId;
 
       const mockTask = {
         id: 1,
-        name: request.name,
-        content: request.content,
+        name: dto.name,
+        content: dto.content,
         taskList: { id: taskListId },
       } as Task;
 
@@ -51,26 +51,26 @@ describe('TaskController', () => {
         .spyOn(taskService, 'createTask')
         .mockResolvedValue(mockTask);
 
-      const result = await controller.createTask(request);
-      expect(createTaskSpy).toHaveBeenCalledWith(request);
+      const result = await controller.createTask(dto);
+      expect(createTaskSpy).toHaveBeenCalledWith(dto);
       expect(result).toEqual(mockTask);
     });
 
     it('should propagate exception if creation failed', async () => {
       const taskListId = 1;
-      const request = new CreateTaskDto();
-      request.name = 'New Task';
-      request.content = '';
-      request.taskListId = taskListId;
+      const dto = new CreateTaskDto();
+      dto.name = 'New Task';
+      dto.content = '';
+      dto.taskListId = taskListId;
 
       const createTaskSpy = jest
         .spyOn(taskService, 'createTask')
         .mockRejectedValue(new Error('Creation failed'));
 
-      await expect(controller.createTask(request)).rejects.toThrow(
+      await expect(controller.createTask(dto)).rejects.toThrow(
         'Creation failed',
       );
-      expect(createTaskSpy).toHaveBeenCalledWith(request);
+      expect(createTaskSpy).toHaveBeenCalledWith(dto);
     });
   });
 
@@ -109,18 +109,18 @@ describe('TaskController', () => {
   describe('updateTask', () => {
     it('should update a task', async () => {
       const taskId = 1;
-      const request = new UpdateTaskDto();
-      request.name = 'Updated Task';
+      const dto = new UpdateTaskDto();
+      dto.name = 'Updated Task';
 
       const updateTaskSpy = jest
         .spyOn(taskService, 'updateTask')
         .mockResolvedValue({
           id: taskId,
-          ...request,
+          ...dto,
         } as Task);
 
-      const result = await controller.updateTask(taskId, request);
-      expect(updateTaskSpy).toHaveBeenCalledWith(taskId, request);
+      const result = await controller.updateTask(taskId, dto);
+      expect(updateTaskSpy).toHaveBeenCalledWith(taskId, dto);
       expect(result).toEqual({
         success: true,
         message: `Task with ID ${taskId} updated successfully`,
@@ -129,8 +129,8 @@ describe('TaskController', () => {
 
     it('should propagate exception if update failed', async () => {
       const taskId = -1;
-      const request = new UpdateTaskDto();
-      request.name = 'Updated Task';
+      const dto = new UpdateTaskDto();
+      dto.name = 'Updated Task';
 
       const updateTaskSpy = jest
         .spyOn(taskService, 'updateTask')
@@ -138,10 +138,10 @@ describe('TaskController', () => {
           new NotFoundException(`Task with ID ${taskId} not found`),
         );
 
-      await expect(controller.updateTask(taskId, request)).rejects.toThrow(
+      await expect(controller.updateTask(taskId, dto)).rejects.toThrow(
         `Task with ID ${taskId} not found`,
       );
-      expect(updateTaskSpy).toHaveBeenCalledWith(taskId, request);
+      expect(updateTaskSpy).toHaveBeenCalledWith(taskId, dto);
     });
   });
 
@@ -152,39 +152,39 @@ describe('TaskController', () => {
       const moveTaskSpy = jest
         .spyOn(taskService, 'moveTask')
         .mockResolvedValue(TaskMoveResult.Success);
-      const request = new AbsoluteMoveTaskDto();
-      request.taskListId = 3;
+      const dto = new AbsoluteMoveTaskDto();
+      dto.taskListId = 3;
 
-      const result = await controller.moveTask(taskId, request);
-      expect(moveTaskSpy).toHaveBeenCalledWith(taskId, request);
+      const result = await controller.moveTask(taskId, dto);
+      expect(moveTaskSpy).toHaveBeenCalledWith(taskId, dto);
       expect(result).toEqual({
         success: true,
-        message: `Task with ID ${taskId} moved to task list ${request.taskListId} successfully`,
+        message: `Task with ID ${taskId} moved to task list ${dto.taskListId} successfully`,
       });
     });
 
     it('should return successfully if task is already in the target task list', async () => {
       const taskId = 1;
-      const request = new AbsoluteMoveTaskDto();
+      const dto = new AbsoluteMoveTaskDto();
       // Same as current task list id
-      request.taskListId = 1;
+      dto.taskListId = 1;
 
       const moveTaskSpy = jest
         .spyOn(taskService, 'moveTask')
         .mockResolvedValue(TaskMoveResult.AlreadyInPlace);
 
-      const result = await controller.moveTask(taskId, request);
-      expect(moveTaskSpy).toHaveBeenCalledWith(taskId, request);
+      const result = await controller.moveTask(taskId, dto);
+      expect(moveTaskSpy).toHaveBeenCalledWith(taskId, dto);
       expect(result).toEqual({
         success: true,
-        message: `Task with ID ${taskId} is already in task list ${request.taskListId}`,
+        message: `Task with ID ${taskId} is already in task list ${dto.taskListId}`,
       });
     });
 
     it('should propagate exception if failed', async () => {
       const taskId = -1;
-      const request = new AbsoluteMoveTaskDto();
-      request.taskListId = 3;
+      const dto = new AbsoluteMoveTaskDto();
+      dto.taskListId = 3;
 
       const moveTaskSpy = jest
         .spyOn(taskService, 'moveTask')
@@ -192,10 +192,10 @@ describe('TaskController', () => {
           new NotFoundException(`Task with ID ${taskId} not found`),
         );
 
-      await expect(controller.moveTask(taskId, request)).rejects.toThrow(
+      await expect(controller.moveTask(taskId, dto)).rejects.toThrow(
         `Task with ID ${taskId} not found`,
       );
-      expect(moveTaskSpy).toHaveBeenCalledWith(taskId, request);
+      expect(moveTaskSpy).toHaveBeenCalledWith(taskId, dto);
     });
   });
 
@@ -206,11 +206,11 @@ describe('TaskController', () => {
       const reorderTaskSpy = jest
         .spyOn(taskService, 'reorderTask')
         .mockResolvedValue(TaskMoveResult.Success);
-      const request = new AbsoluteReorderTaskDto();
-      request.position = TaskPosition.First;
+      const dto = new AbsoluteReorderTaskDto();
+      dto.position = TaskPosition.First;
 
-      const result = await controller.reorderTask(taskId, request);
-      expect(reorderTaskSpy).toHaveBeenCalledWith(taskId, request);
+      const result = await controller.reorderTask(taskId, dto);
+      expect(reorderTaskSpy).toHaveBeenCalledWith(taskId, dto);
       expect(result).toEqual({
         success: true,
         message: `Task with ID ${taskId} reordered successfully`,
@@ -219,15 +219,15 @@ describe('TaskController', () => {
 
     it('should return successfully if task is already in place', async () => {
       const taskId = 1;
-      const request = new AbsoluteReorderTaskDto();
-      request.position = TaskPosition.First;
+      const dto = new AbsoluteReorderTaskDto();
+      dto.position = TaskPosition.First;
 
       const reorderTaskSpy = jest
         .spyOn(taskService, 'reorderTask')
         .mockResolvedValue(TaskMoveResult.AlreadyInPlace);
 
-      const result = await controller.reorderTask(taskId, request);
-      expect(reorderTaskSpy).toHaveBeenCalledWith(taskId, request);
+      const result = await controller.reorderTask(taskId, dto);
+      expect(reorderTaskSpy).toHaveBeenCalledWith(taskId, dto);
       expect(result).toEqual({
         success: true,
         message: `Task with ID ${taskId} is already in place.`,
@@ -236,8 +236,8 @@ describe('TaskController', () => {
 
     it('should propagate exception if failed', async () => {
       const taskId = -1;
-      const request = new AbsoluteReorderTaskDto();
-      request.position = TaskPosition.First;
+      const dto = new AbsoluteReorderTaskDto();
+      dto.position = TaskPosition.First;
 
       const reorderTaskSpy = jest
         .spyOn(taskService, 'reorderTask')
@@ -245,10 +245,10 @@ describe('TaskController', () => {
           new NotFoundException(`Task with ID ${taskId} not found`),
         );
 
-      await expect(controller.reorderTask(taskId, request)).rejects.toThrow(
+      await expect(controller.reorderTask(taskId, dto)).rejects.toThrow(
         `Task with ID ${taskId} not found`,
       );
-      expect(reorderTaskSpy).toHaveBeenCalledWith(taskId, request);
+      expect(reorderTaskSpy).toHaveBeenCalledWith(taskId, dto);
     });
   });
 });

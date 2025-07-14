@@ -22,8 +22,8 @@ export class TaskListController {
   }
 
   @Post()
-  createTaskList(@Body() request: CreateTaskListDto) {
-    return this.taskService.createTaskList(request);
+  createTaskList(@Body() dto: CreateTaskListDto) {
+    return this.taskService.createTaskList(dto);
   }
 
   @Delete('/:id')

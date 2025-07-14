@@ -38,9 +38,9 @@ export class TaskService {
     return result;
   }
 
-  async createTaskList(request: CreateTaskListDto) {
+  async createTaskList(dto: CreateTaskListDto) {
     const taskList = this.taskListRepo.create({
-      name: request.name,
+      name: dto.name,
       creator: { id: this.userId },
     });
 
@@ -83,8 +83,8 @@ export class TaskService {
     return taskList;
   }
 
-  async getTasks(param?: QueryTaskDto) {
-    const { taskListId, order = DEFAULT_TASK_ORDER } = param || {};
+  async getTasks(dto?: QueryTaskDto) {
+    const { taskListId, order = DEFAULT_TASK_ORDER } = dto || {};
     // TODO: get other user's tasks with permission checking
     if (taskListId) {
       await this.validateTaskList(taskListId);
@@ -97,13 +97,13 @@ export class TaskService {
     return tasks;
   }
 
-  async createTask(request: CreateTaskDto) {
-    await this.validateTaskList(request.taskListId);
+  async createTask(dto: CreateTaskDto) {
+    await this.validateTaskList(dto.taskListId);
 
     const lastTask = await this.taskRepo.findOne({
       where: {
         creator: { id: this.userId },
-        taskList: { id: request.taskListId },
+        taskList: { id: dto.taskListId },
       },
       order: { order: 'DESC' },
     });
@@ -111,8 +111,8 @@ export class TaskService {
     const newOrder = lastTask ? lastTask.order + 1 : 0;
 
     const task = this.taskRepo.create({
-      name: request.name,
-      taskList: { id: request.taskListId },
+      name: dto.name,
+      taskList: { id: dto.taskListId },
       creator: { id: this.userId },
       order: newOrder,
     });
@@ -126,11 +126,11 @@ export class TaskService {
     return this.taskRepo.delete(taskId);
   }
 
-  async updateTask(taskId: number, updateData: UpdateTaskDto) {
+  async updateTask(taskId: number, dto: UpdateTaskDto) {
     const task = await this.validateTask(taskId);
 
     // Update only the fields that are provided in updateData
-    Object.assign(task, updateData);
+    Object.assign(task, dto);
 
     return this.taskRepo.save(task);
   }
@@ -138,12 +138,12 @@ export class TaskService {
   /**
    * move task to another task list
    */
-  async moveTask(taskId: number, request: MoveTaskDto) {
+  async moveTask(taskId: number, dto: MoveTaskDto) {
     const task = await this.validateTask(taskId);
-    if (task.taskListId === request.taskListId) {
+    if (task.taskListId === dto.taskListId) {
       return TaskMoveResult.AlreadyInPlace;
     }
-    const targetTaskList = await this.validateTaskList(request.taskListId);
+    const targetTaskList = await this.validateTaskList(dto.taskListId);
 
     const lastTaskInList = await this.taskRepo.findOne({
       where: {
@@ -212,26 +212,26 @@ export class TaskService {
   /**
    * reorder task to different position in same task list
    */
-  async reorderTask(taskId: number, request: ReorderTaskDto) {
+  async reorderTask(taskId: number, dto: ReorderTaskDto) {
     // TODO: refactor to template method
-    if (request.position === TaskPosition.First) {
+    if (dto.position === TaskPosition.First) {
       return this.reorderToFirst(taskId);
     }
 
-    if (request.position === TaskPosition.Last) {
+    if (dto.position === TaskPosition.Last) {
       return this.reorderToLast(taskId);
     }
 
     if (
       !(
-        request.position === TaskPosition.Before ||
-        request.position === TaskPosition.After
+        dto.position === TaskPosition.Before ||
+        dto.position === TaskPosition.After
       )
     ) {
       return;
     }
-    const { anchorTaskId } = request;
-    const { position } = request;
+    const { anchorTaskId } = dto;
+    const { position } = dto;
 
     if (taskId === anchorTaskId) {
       return TaskMoveResult.AlreadyInPlace;

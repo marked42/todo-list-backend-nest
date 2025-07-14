@@ -17,21 +17,18 @@ export class UserService {
     });
   }
 
-  async create(userCreateRequest: CreateUserDto) {
-    const existed = await this.findByUserName(userCreateRequest.username);
+  async create(dto: CreateUserDto) {
+    const existed = await this.findByUserName(dto.username);
 
     if (existed) {
       throw new HttpException('用户名已被占用', 400);
     }
 
     const user = new User();
-    user.name = userCreateRequest.username;
+    user.name = dto.username;
 
     const salt = await bcrypt.genSalt(10);
-    user.encryptedPassword = await bcrypt.hash(
-      userCreateRequest.password,
-      salt,
-    );
+    user.encryptedPassword = await bcrypt.hash(dto.password, salt);
 
     const saved = await this.userRepository.save(user);
     return saved;

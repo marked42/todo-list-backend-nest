@@ -49,11 +49,11 @@ describe('TaskListController', () => {
 
   describe('createTaskList', () => {
     it('should create task list', async () => {
-      const request = new CreateTaskListDto();
-      request.name = 'task-list-1';
+      const dto = new CreateTaskListDto();
+      dto.name = 'task-list-1';
 
       const expectedTaskList = new TaskList();
-      expectedTaskList.name = request.name;
+      expectedTaskList.name = dto.name;
       expectedTaskList.creator = { id: mockUser.id } as User;
 
       const createTaskList = jest
@@ -63,12 +63,12 @@ describe('TaskListController', () => {
           id: 1,
         });
 
-      const result = await controller.createTaskList(request);
+      const result = await controller.createTaskList(dto);
 
       // If your controller expects a plain object, not an instance, adjust the expectation accordingly
       expect(createTaskList).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: request.name,
+          name: dto.name,
         }),
       );
       expect(result).toEqual({
