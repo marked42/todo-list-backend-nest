@@ -4,10 +4,7 @@ import { TaskController } from './TaskController';
 import { TaskService } from '../service/TaskService';
 import { Task } from '../entity/Task';
 import { TaskMoveResult, TaskPosition } from '../model';
-import {
-  AbsoluteMoveRequest,
-  RelativeMoveRequest,
-} from '../dto/TaskMoveRequest';
+import { AbsoluteMoveRequest } from '../dto/TaskMoveRequest';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 import { AbsoluteReorderRequest } from '../dto/TaskReorderRequest';
@@ -22,7 +19,7 @@ describe('TaskController', () => {
       providers: [
         {
           provide: TaskService,
-          useValue: Object.create(TaskService.prototype),
+          useValue: Object.create(TaskService.prototype) as TaskService,
         },
       ],
     }).compile();

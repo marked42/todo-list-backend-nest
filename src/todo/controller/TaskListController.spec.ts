@@ -20,7 +20,7 @@ describe('TaskListController', () => {
           provide: TaskService,
           useValue: Object.create(TaskService.prototype, {
             user: { value: mockUser },
-          }),
+          }) as TaskService,
         },
       ],
     }).compile();
