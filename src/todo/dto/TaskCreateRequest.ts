@@ -12,6 +12,14 @@ export class TaskCreateRequest {
   })
   name: string;
 
+  // TODO: varchar limit
+  @ApiProperty()
+  @IsString()
+  @MaxLength(2000, {
+    message: '任务名称不能超过2000个字符',
+  })
+  content: string;
+
   @IsNotEmpty({
     message: '任务列表ID不能为空',
   })

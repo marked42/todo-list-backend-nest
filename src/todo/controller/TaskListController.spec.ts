@@ -1,9 +1,10 @@
 import { Test } from '@nestjs/testing';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { User } from '@/core/entity/User';
 import { TaskService } from '../service/TaskService';
 import { TaskListController } from './TaskListController';
 import { TaskList } from '../entity/TaskList';
+import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
 
 describe('TaskListController', () => {
   let controller: TaskListController;
@@ -16,15 +17,10 @@ describe('TaskListController', () => {
       controllers: [TaskListController],
       providers: [
         {
-          // TODO: best way to mock TaskService
           provide: TaskService,
-          useValue: {
-            createTaskList: jest.fn(),
-            deleteTaskList: jest.fn(),
-            renameTaskList: jest.fn(),
-            getTaskLists: jest.fn(),
-            user: mockUser,
-          },
+          useValue: Object.create(TaskService.prototype, {
+            user: { value: mockUser },
+          }),
         },
       ],
     }).compile();
@@ -53,12 +49,11 @@ describe('TaskListController', () => {
 
   describe('createTaskList', () => {
     it('should create task list', async () => {
-      const taskCreateRequestMock = {
-        name: 'task-list-1',
-      };
+      const request = new TaskListCreateRequest();
+      request.name = 'task-list-1';
 
       const expectedTaskList = new TaskList();
-      expectedTaskList.name = taskCreateRequestMock.name;
+      expectedTaskList.name = request.name;
       expectedTaskList.creator = { id: mockUser.id } as User;
 
       const createTaskList = jest
@@ -68,12 +63,12 @@ describe('TaskListController', () => {
           id: 1,
         });
 
-      const result = await controller.createTaskList(taskCreateRequestMock);
+      const result = await controller.createTaskList(request);
 
       // If your controller expects a plain object, not an instance, adjust the expectation accordingly
       expect(createTaskList).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: taskCreateRequestMock.name,
+          name: request.name,
         }),
       );
       expect(result).toEqual({
@@ -100,10 +95,10 @@ describe('TaskListController', () => {
       });
     });
 
-    it('should throw error 404 when deleting non-exist task list', async () => {
+    it('should propagate exception when failed', async () => {
       const taskListId = 1;
 
-      jest
+      const deleteTaskList = jest
         .spyOn(taskService, 'deleteTaskList')
         .mockRejectedValue(
           new NotFoundException(`Task list with ID ${taskListId} not found`),
@@ -112,23 +107,7 @@ describe('TaskListController', () => {
       await expect(controller.deleteTaskList(1)).rejects.toThrow(
         new NotFoundException(`Task list with ID ${taskListId} not found`),
       );
-    });
-
-    it('should throw error 403 when deleting task list not owned by user', async () => {
-      const taskListId = 1;
-      jest
-        .spyOn(taskService, 'deleteTaskList')
-        .mockRejectedValue(
-          new ForbiddenException(
-            `Task list with ID ${taskListId} not owned by user ${mockUser.id}`,
-          ),
-        );
-
-      await expect(controller.deleteTaskList(taskListId)).rejects.toThrow(
-        new ForbiddenException(
-          `Task list with ID ${taskListId} not owned by user ${mockUser.id}`,
-        ),
-      );
+      expect(deleteTaskList).toHaveBeenCalledWith(taskListId);
     });
   });
 
@@ -154,17 +133,22 @@ describe('TaskListController', () => {
       });
     });
 
-    it('throw error 404 when renaming non-exist task list', async () => {
+    it('throw propagate exception when failed', async () => {
       const taskListId = 1;
-      jest
+      const newName = 'Renamed Task List';
+
+      const renameTaskList = jest
         .spyOn(taskService, 'renameTaskList')
         .mockRejectedValue(
           new NotFoundException(`Task list with ID ${taskListId} not found`),
         );
 
-      await expect(controller.renameTaskList(1, 'New Name')).rejects.toThrow(
+      await expect(
+        controller.renameTaskList(taskListId, newName),
+      ).rejects.toThrow(
         new NotFoundException(`Task list with ID ${taskListId} not found`),
       );
+      expect(renameTaskList).toHaveBeenCalledWith(taskListId, newName);
     });
   });
 });
