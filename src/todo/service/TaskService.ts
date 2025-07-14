@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -15,8 +14,8 @@ import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
 import { CURRENT_USER } from '@/auth/model';
 import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
-import { TaskMoveResult } from '../model';
-import { TaskPosition, TaskReorderRequest } from '../dto/TaskReorderRequest';
+import { TaskMoveResult, TaskPosition } from '../model';
+import { TaskReorderRequest } from '../dto/TaskReorderRequest';
 import { TaskMoveRequest } from '../dto/TaskMoveRequest';
 import { DEFAULT_TASK_ORDER, TaskQueryParam } from '../dto/TaskQueryParam';
 
@@ -214,23 +213,25 @@ export class TaskService {
    * reorder task to different position in same task list
    */
   async reorderTask(taskId: number, request: TaskReorderRequest) {
-    const { position, anchorTaskId } = request;
-
-    if (position === TaskPosition.First) {
+    // TODO: refactor to template method
+    if (request.position === TaskPosition.First) {
       return this.reorderToFirst(taskId);
     }
 
-    if (position === TaskPosition.Last) {
+    if (request.position === TaskPosition.Last) {
       return this.reorderToLast(taskId);
     }
 
-    // TODO: better checked by parameter validation
-    if (anchorTaskId === undefined) {
-      // If no target task is specified, we cannot reorder
-      throw new BadRequestException(
-        'Target task ID must be provided for relative reordering (Before, After)',
-      );
+    if (
+      !(
+        request.position === TaskPosition.Before ||
+        request.position === TaskPosition.After
+      )
+    ) {
+      return;
     }
+    const { anchorTaskId } = request;
+    const { position } = request;
 
     if (taskId === anchorTaskId) {
       return TaskMoveResult.AlreadyInPlace;

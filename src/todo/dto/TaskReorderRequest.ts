@@ -1,25 +1,35 @@
-import { IsEnum, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
+import { IsEnum, IsIn, IsInt, IsNotEmpty } from 'class-validator';
+import {
+  type AbsolutePosition,
+  AbsolutePositions,
+  type RelativePosition,
+  RelativePositions,
+} from '../model';
 
-export enum TaskPosition {
-  Before = 'before',
-  After = 'after',
-  First = 'first',
-  Last = 'last',
-}
-
-// TODO: validate union type of relative and absolute position
-export class TaskReorderRequest {
+export class RelativeReorderRequest {
   @IsNotEmpty()
-  @IsEnum(TaskPosition, {
-    message: `Position must be one of: ${Object.values(TaskPosition).join(', ')}`,
+  @IsIn(RelativePositions, {
+    message: `Relative position must be one of: ${RelativePositions.join(', ')}`,
   })
-  position: TaskPosition;
+  position: RelativePosition;
 
-  @ValidateIf((o: TaskReorderRequest) =>
-    [TaskPosition.Before, o.position === TaskPosition.After].includes(
-      o.position,
-    ),
-  )
-  @IsString()
-  anchorTaskId?: number;
+  @IsInt()
+  anchorTaskId: number;
 }
+
+export class AbsoluteReorderRequest {
+  @IsNotEmpty()
+  @IsEnum(AbsolutePositions, {
+    message: `Absolute position must be one of: ${AbsolutePositions.join(', ')}`,
+  })
+  position: AbsolutePosition;
+}
+
+export const TaskReorderRequests = [
+  RelativeReorderRequest,
+  AbsoluteReorderRequest,
+];
+
+export type TaskReorderRequest = InstanceType<
+  (typeof TaskReorderRequests)[number]
+>;

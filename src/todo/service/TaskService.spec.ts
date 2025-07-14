@@ -9,14 +9,18 @@ import { TaskList } from '../entity/TaskList';
 import { Task } from '../entity/Task';
 import { TaskCreateRequest } from '../dto/TaskCreateRequest';
 import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
-import { TaskPosition, TaskReorderRequest } from '../dto/TaskReorderRequest';
+import {
+  AbsoluteReorderRequest,
+  RelativeReorderRequest,
+} from '../dto/TaskReorderRequest';
 import {
   TaskListStatus,
   TaskMoveResult,
   TaskOrder,
+  TaskPosition,
   TaskStatus,
 } from '../model';
-import { TaskMoveRequest } from '../dto/TaskMoveRequest';
+import { RelativeMoveRequest } from '../dto/TaskMoveRequest';
 import { TaskQueryParam } from '../dto/TaskQueryParam';
 
 const getEntityId = (entity: { id: number }) => entity.id;
@@ -545,7 +549,7 @@ describe('TaskService', () => {
           throw new Error('user has no another task list');
         }
 
-        const request = new TaskMoveRequest();
+        const request = new RelativeMoveRequest();
         request.taskListId = anotherUserTaskList.id;
 
         const result = await service.moveTask(taskId, request);
@@ -570,7 +574,7 @@ describe('TaskService', () => {
 
       it('should not move a task if it is already in the target task list', async () => {
         const { id: taskId, taskListId } = db.firstOwnedTask;
-        const request = new TaskMoveRequest();
+        const request = new RelativeMoveRequest();
         request.taskListId = taskListId;
 
         const result = await service.moveTask(taskId, request);
@@ -579,7 +583,7 @@ describe('TaskService', () => {
 
       it('should throw NotFoundException when moving a non-existent task', async () => {
         const taskId = -1;
-        const request = new TaskMoveRequest();
+        const request = new RelativeMoveRequest();
         request.taskListId = 3;
         await expect(service.moveTask(taskId, request)).rejects.toThrow(
           `Task with ID ${taskId} not found`,
@@ -588,7 +592,7 @@ describe('TaskService', () => {
 
       it('should throw ForbiddenException when moving a task not owned by user', async () => {
         const { id: taskId } = db.firstUnownedTask;
-        const request = new TaskMoveRequest();
+        const request = new RelativeMoveRequest();
         request.taskListId = -1;
         await expect(service.moveTask(taskId, request)).rejects.toThrow(
           `Task with ID ${taskId} not owned by user ${mockCurrentUser.id}`,
@@ -597,7 +601,7 @@ describe('TaskService', () => {
 
       it('should throw NotFoundException when moving to a non-existent task list', async () => {
         const { id: taskId } = db.firstOwnedTask;
-        const request = new TaskMoveRequest();
+        const request = new RelativeMoveRequest();
         request.taskListId = -1;
         await expect(service.moveTask(taskId, request)).rejects.toThrow(
           `Task list with ID ${request.taskListId} not found`,
@@ -606,7 +610,7 @@ describe('TaskService', () => {
 
       it('should throw ForbiddenException when moving to a task list not owned by user', async () => {
         const { id: taskId } = db.firstOwnedTask;
-        const request = new TaskMoveRequest();
+        const request = new RelativeMoveRequest();
         request.taskListId = db.firstUnownedTaskList.id;
         await expect(service.moveTask(taskId, request)).rejects.toThrow(
           `Task list with ID ${request.taskListId} not owned by user ${mockCurrentUser.id}`,
@@ -620,7 +624,7 @@ describe('TaskService', () => {
           it('should move a task to first place', async () => {
             const task = db.ownedTasks[Math.floor(db.ownedTasks.length / 2)];
 
-            const request = new TaskReorderRequest();
+            const request = new AbsoluteReorderRequest();
             request.position = TaskPosition.First;
 
             const result = await service.reorderTask(task.id, request);
@@ -643,7 +647,7 @@ describe('TaskService', () => {
           it('should do nothing when already in place (moving first task)', async () => {
             const task = db.ownedTasks[0];
 
-            const request = new TaskReorderRequest();
+            const request = new AbsoluteReorderRequest();
             request.position = TaskPosition.First;
 
             const result = await service.reorderTask(task.id, request);
@@ -666,7 +670,7 @@ describe('TaskService', () => {
 
           it('should throw NotFoundException when moving non-exist task', async () => {
             const nonExistId = -1;
-            const request = new TaskReorderRequest();
+            const request = new AbsoluteReorderRequest();
             request.position = TaskPosition.First;
             await expect(
               service.reorderTask(nonExistId, request),
@@ -677,7 +681,7 @@ describe('TaskService', () => {
 
           it('should throw ForbiddenException when moving unowned task', async () => {
             const task = db.firstUnownedTask;
-            const request = new TaskReorderRequest();
+            const request = new AbsoluteReorderRequest();
             request.position = TaskPosition.First;
             await expect(service.reorderTask(task.id, request)).rejects.toThrow(
               new ForbiddenException(
@@ -691,7 +695,7 @@ describe('TaskService', () => {
           it('should move a task to last place', async () => {
             const task = db.ownedTasks[Math.floor(db.ownedTasks.length / 2)];
 
-            const request = new TaskReorderRequest();
+            const request = new AbsoluteReorderRequest();
             request.position = TaskPosition.Last;
 
             const result = await service.reorderTask(task.id, request);
@@ -714,7 +718,7 @@ describe('TaskService', () => {
           it('should do nothing when already in place (moving last task)', async () => {
             const task = db.ownedTasks[db.ownedTasks.length - 1];
 
-            const request = new TaskReorderRequest();
+            const request = new AbsoluteReorderRequest();
             request.position = TaskPosition.Last;
 
             const result = await service.reorderTask(task.id, request);
@@ -737,7 +741,7 @@ describe('TaskService', () => {
 
           it('should throw NotFoundException when moving non-exist task', async () => {
             const nonExistId = -1;
-            const request = new TaskReorderRequest();
+            const request = new AbsoluteReorderRequest();
             request.position = TaskPosition.Last;
             await expect(
               service.reorderTask(nonExistId, request),
@@ -748,7 +752,7 @@ describe('TaskService', () => {
 
           it('should throw ForbiddenException when moving unowned task', async () => {
             const task = db.firstUnownedTask;
-            const request = new TaskReorderRequest();
+            const request = new AbsoluteReorderRequest();
             request.position = TaskPosition.Last;
             await expect(service.reorderTask(task.id, request)).rejects.toThrow(
               new ForbiddenException(
@@ -791,7 +795,7 @@ describe('TaskService', () => {
             const task = taskList.tasks[0];
             const targetTask = taskList.tasks[taskList.tasks.length - 1];
 
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.Before;
             request.anchorTaskId = targetTask.id;
 
@@ -810,7 +814,7 @@ describe('TaskService', () => {
             const task = taskList.tasks[taskList.tasks.length - 1];
             const targetTask = taskList.tasks[0];
 
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.Before;
             request.anchorTaskId = targetTask.id;
 
@@ -827,7 +831,7 @@ describe('TaskService', () => {
           it('should do nothing when already in place (relative task is the task to move)', async () => {
             const task = db.ownedTasks[Math.floor(db.ownedTasks.length / 2)];
 
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.Before;
             // same task
             request.anchorTaskId = task.id;
@@ -842,7 +846,7 @@ describe('TaskService', () => {
               throw new Error('no consecutive tasks');
             }
 
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.Before;
             // same task
             request.anchorTaskId = nextTask.id;
@@ -854,7 +858,7 @@ describe('TaskService', () => {
           it('should throw NotFoundException when moving non-exist task', async () => {
             const nonExistId = -1;
             const targetTask = db.firstOwnedTask;
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.Before;
             request.anchorTaskId = targetTask.id;
 
@@ -867,7 +871,7 @@ describe('TaskService', () => {
 
           it('should throw ForbiddenException when moving unowned task', async () => {
             const task = db.firstUnownedTask;
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.Before;
             request.anchorTaskId = db.firstOwnedTask.id;
 
@@ -882,7 +886,7 @@ describe('TaskService', () => {
             const taskId = db.firstOwnedTask.id;
 
             const nonExistId = -1;
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.Before;
             request.anchorTaskId = nonExistId;
 
@@ -893,7 +897,7 @@ describe('TaskService', () => {
 
           it('should throw ForbiddenException when target task unowned', async () => {
             const task = db.firstOwnedTask;
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.Before;
             request.anchorTaskId = db.firstUnownedTask.id;
 
@@ -911,7 +915,7 @@ describe('TaskService', () => {
             const task = taskList.tasks[0];
             const targetTask = taskList.tasks[taskList.tasks.length - 1];
 
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.After;
             request.anchorTaskId = targetTask.id;
 
@@ -930,7 +934,7 @@ describe('TaskService', () => {
             const task = taskList.tasks[taskList.tasks.length - 1];
             const targetTask = taskList.tasks[0];
 
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.After;
             request.anchorTaskId = targetTask.id;
 
@@ -947,7 +951,7 @@ describe('TaskService', () => {
           it('should do nothing when already in place (relative task is the task to move)', async () => {
             const task = db.ownedTasks[Math.floor(db.ownedTasks.length / 2)];
 
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.After;
             // same task
             request.anchorTaskId = task.id;
@@ -962,7 +966,7 @@ describe('TaskService', () => {
               throw new Error('no consecutive tasks');
             }
 
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.After;
             // same task
             request.anchorTaskId = previousTask.id;
@@ -974,7 +978,7 @@ describe('TaskService', () => {
           it('should throw NotFoundException when moving non-exist task', async () => {
             const nonExistId = -1;
             const targetTask = db.firstOwnedTask;
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.After;
             request.anchorTaskId = targetTask.id;
 
@@ -987,7 +991,7 @@ describe('TaskService', () => {
 
           it('should throw ForbiddenException when moving unowned task', async () => {
             const task = db.firstUnownedTask;
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.After;
             request.anchorTaskId = db.firstOwnedTask.id;
 
@@ -1002,7 +1006,7 @@ describe('TaskService', () => {
             const taskId = db.firstOwnedTask.id;
 
             const nonExistId = -1;
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.After;
             request.anchorTaskId = nonExistId;
 
@@ -1013,7 +1017,7 @@ describe('TaskService', () => {
 
           it('should throw ForbiddenException when target task unowned', async () => {
             const task = db.firstOwnedTask;
-            const request = new TaskReorderRequest();
+            const request = new RelativeReorderRequest();
             request.position = TaskPosition.After;
             request.anchorTaskId = db.firstUnownedTask.id;
 
