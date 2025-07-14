@@ -23,13 +23,13 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Get()
-  async getTasks(@Query() taskQueryParam: QueryTaskDto) {
-    return this.taskService.getTasks(taskQueryParam);
+  async getTasks(@Query() dto: QueryTaskDto) {
+    return this.taskService.getTasks(dto);
   }
 
   @Post()
-  async createTask(@Body() request: CreateTaskDto) {
-    return this.taskService.createTask(request);
+  async createTask(@Body() dto: CreateTaskDto) {
+    return this.taskService.createTask(dto);
   }
 
   @Delete('/:id')
@@ -47,9 +47,9 @@ export class TaskController {
   @Patch('/:id')
   async updateTask(
     @Param('id', new ParseIntPipe({ optional: false })) taskId: number,
-    @Body() updateData: UpdateTaskDto,
+    @Body() dto: UpdateTaskDto,
   ) {
-    await this.taskService.updateTask(taskId, updateData);
+    await this.taskService.updateTask(taskId, dto);
     return {
       success: true,
       message: `Task with ID ${taskId} updated successfully`,
@@ -61,20 +61,20 @@ export class TaskController {
   async moveTask(
     @Param('id', new ParseIntPipe({ optional: false })) taskId: number,
     @Body(new UnionTypeValidationPipe(MoveTaskDtoClasses))
-    request: MoveTaskDto,
+    dto: MoveTaskDto,
   ) {
-    const moved = await this.taskService.moveTask(taskId, request);
+    const moved = await this.taskService.moveTask(taskId, dto);
 
     switch (moved) {
       case TaskMoveResult.AlreadyInPlace:
         return {
           success: true,
-          message: `Task with ID ${taskId} is already in task list ${request.taskListId}`,
+          message: `Task with ID ${taskId} is already in task list ${dto.taskListId}`,
         };
       case TaskMoveResult.Success:
         return {
           success: true,
-          message: `Task with ID ${taskId} moved to task list ${request.taskListId} successfully`,
+          message: `Task with ID ${taskId} moved to task list ${dto.taskListId} successfully`,
         };
       default:
         throw new Error('unreachable case');
@@ -85,9 +85,9 @@ export class TaskController {
   async reorderTask(
     @Param('id') taskId: number,
     @Body(new UnionTypeValidationPipe(ReorderTaskDtoClasses))
-    request: ReorderTaskDto,
+    dto: ReorderTaskDto,
   ) {
-    const moved = await this.taskService.reorderTask(taskId, request);
+    const moved = await this.taskService.reorderTask(taskId, dto);
 
     switch (moved) {
       case TaskMoveResult.AlreadyInPlace:
