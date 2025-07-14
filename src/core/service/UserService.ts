@@ -2,7 +2,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { User } from '../entity/User';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserCreateRequest } from '../dto/UserCreateRequest';
+import { CreateUserDto } from '../dto/CreateUserDto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class UserService {
     });
   }
 
-  async create(userCreateRequest: UserCreateRequest) {
+  async create(userCreateRequest: CreateUserDto) {
     const existed = await this.findByUserName(userCreateRequest.username);
 
     if (existed) {

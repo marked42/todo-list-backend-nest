@@ -4,7 +4,7 @@ import { User } from '@/core/entity/User';
 import { TaskService } from '../service/TaskService';
 import { TaskListController } from './TaskListController';
 import { TaskList } from '../entity/TaskList';
-import { TaskListCreateRequest } from '../dto/TaskListCreateRequest';
+import { CreateTaskListDto } from '../dto/CreateTaskListDto';
 
 describe('TaskListController', () => {
   let controller: TaskListController;
@@ -49,7 +49,7 @@ describe('TaskListController', () => {
 
   describe('createTaskList', () => {
     it('should create task list', async () => {
-      const request = new TaskListCreateRequest();
+      const request = new CreateTaskListDto();
       request.name = 'task-list-1';
 
       const expectedTaskList = new TaskList();

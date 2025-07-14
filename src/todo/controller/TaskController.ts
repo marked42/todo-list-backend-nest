@@ -10,15 +10,12 @@ import {
   Query,
 } from '@nestjs/common';
 import { TaskMoveResult } from '../model';
-import { TaskCreateRequest } from '../dto/TaskCreateRequest';
-import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
-import {
-  TaskReorderRequest,
-  TaskReorderRequests,
-} from '../dto/TaskReorderRequest';
-import { TaskMoveRequest, TaskMoveRequests } from '../dto/TaskMoveRequest';
+import { CreateTaskDto } from '../dto/CreateTaskDto';
+import { UpdateTaskDto } from '../dto/UpdateTaskDto';
+import { ReorderTaskDto, ReorderTaskDtoClasses } from '../dto/ReorderTaskDto';
+import { MoveTaskDto, MoveTaskDtoClasses } from '../dto/MoveTaskDto';
 import { TaskService } from '../service/TaskService';
-import { TaskQueryParam } from '../dto/TaskQueryParam';
+import { QueryTaskDto } from '../dto/QueryTaskDto';
 import { UnionTypeValidationPipe } from '@/common/decorator/UnionTypeValidationPipe';
 
 @Controller('tasks')
@@ -26,12 +23,12 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Get()
-  async getTasks(@Query() taskQueryParam: TaskQueryParam) {
+  async getTasks(@Query() taskQueryParam: QueryTaskDto) {
     return this.taskService.getTasks(taskQueryParam);
   }
 
   @Post()
-  async createTask(@Body() request: TaskCreateRequest) {
+  async createTask(@Body() request: CreateTaskDto) {
     return this.taskService.createTask(request);
   }
 
@@ -50,7 +47,7 @@ export class TaskController {
   @Patch('/:id')
   async updateTask(
     @Param('id', new ParseIntPipe({ optional: false })) taskId: number,
-    @Body() updateData: TaskUpdateRequest,
+    @Body() updateData: UpdateTaskDto,
   ) {
     await this.taskService.updateTask(taskId, updateData);
     return {
@@ -63,8 +60,8 @@ export class TaskController {
   @Post('/:id/move')
   async moveTask(
     @Param('id', new ParseIntPipe({ optional: false })) taskId: number,
-    @Body(new UnionTypeValidationPipe(TaskMoveRequests))
-    request: TaskMoveRequest,
+    @Body(new UnionTypeValidationPipe(MoveTaskDtoClasses))
+    request: MoveTaskDto,
   ) {
     const moved = await this.taskService.moveTask(taskId, request);
 
@@ -87,8 +84,8 @@ export class TaskController {
   @Patch('/:id/reorder')
   async reorderTask(
     @Param('id') taskId: number,
-    @Body(new UnionTypeValidationPipe(TaskReorderRequests))
-    request: TaskReorderRequest,
+    @Body(new UnionTypeValidationPipe(ReorderTaskDtoClasses))
+    request: ReorderTaskDto,
   ) {
     const moved = await this.taskService.reorderTask(taskId, request);
 

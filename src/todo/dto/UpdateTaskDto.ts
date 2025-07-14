@@ -1,7 +1,7 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { TaskStatus } from '../model';
 
-export class TaskUpdateRequest {
+export class UpdateTaskDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty({

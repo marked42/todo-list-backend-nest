@@ -4,10 +4,10 @@ import { TaskController } from './TaskController';
 import { TaskService } from '../service/TaskService';
 import { Task } from '../entity/Task';
 import { TaskMoveResult, TaskPosition } from '../model';
-import { AbsoluteMoveRequest } from '../dto/TaskMoveRequest';
-import { TaskCreateRequest } from '../dto/TaskCreateRequest';
-import { TaskUpdateRequest } from '../dto/TaskUpdateRequest';
-import { AbsoluteReorderRequest } from '../dto/TaskReorderRequest';
+import { AbsoluteMoveTaskDto } from '../dto/MoveTaskDto';
+import { CreateTaskDto } from '../dto/CreateTaskDto';
+import { UpdateTaskDto } from '../dto/UpdateTaskDto';
+import { AbsoluteReorderTaskDto } from '../dto/ReorderTaskDto';
 
 describe('TaskController', () => {
   let controller: TaskController;
@@ -35,7 +35,7 @@ describe('TaskController', () => {
   describe('createTask', () => {
     it('should create a task', async () => {
       const taskListId = 1;
-      const request = new TaskCreateRequest();
+      const request = new CreateTaskDto();
       request.name = 'New Task';
       request.content = '';
       request.taskListId = taskListId;
@@ -58,7 +58,7 @@ describe('TaskController', () => {
 
     it('should propagate exception if creation failed', async () => {
       const taskListId = 1;
-      const request = new TaskCreateRequest();
+      const request = new CreateTaskDto();
       request.name = 'New Task';
       request.content = '';
       request.taskListId = taskListId;
@@ -109,7 +109,7 @@ describe('TaskController', () => {
   describe('updateTask', () => {
     it('should update a task', async () => {
       const taskId = 1;
-      const request = new TaskUpdateRequest();
+      const request = new UpdateTaskDto();
       request.name = 'Updated Task';
 
       const updateTaskSpy = jest
@@ -129,7 +129,7 @@ describe('TaskController', () => {
 
     it('should propagate exception if update failed', async () => {
       const taskId = -1;
-      const request = new TaskUpdateRequest();
+      const request = new UpdateTaskDto();
       request.name = 'Updated Task';
 
       const updateTaskSpy = jest
@@ -152,7 +152,7 @@ describe('TaskController', () => {
       const moveTaskSpy = jest
         .spyOn(taskService, 'moveTask')
         .mockResolvedValue(TaskMoveResult.Success);
-      const request = new AbsoluteMoveRequest();
+      const request = new AbsoluteMoveTaskDto();
       request.taskListId = 3;
 
       const result = await controller.moveTask(taskId, request);
@@ -165,7 +165,7 @@ describe('TaskController', () => {
 
     it('should return successfully if task is already in the target task list', async () => {
       const taskId = 1;
-      const request = new AbsoluteMoveRequest();
+      const request = new AbsoluteMoveTaskDto();
       // Same as current task list id
       request.taskListId = 1;
 
@@ -183,7 +183,7 @@ describe('TaskController', () => {
 
     it('should propagate exception if failed', async () => {
       const taskId = -1;
-      const request = new AbsoluteMoveRequest();
+      const request = new AbsoluteMoveTaskDto();
       request.taskListId = 3;
 
       const moveTaskSpy = jest
@@ -206,7 +206,7 @@ describe('TaskController', () => {
       const reorderTaskSpy = jest
         .spyOn(taskService, 'reorderTask')
         .mockResolvedValue(TaskMoveResult.Success);
-      const request = new AbsoluteReorderRequest();
+      const request = new AbsoluteReorderTaskDto();
       request.position = TaskPosition.First;
 
       const result = await controller.reorderTask(taskId, request);
@@ -219,7 +219,7 @@ describe('TaskController', () => {
 
     it('should return successfully if task is already in place', async () => {
       const taskId = 1;
-      const request = new AbsoluteReorderRequest();
+      const request = new AbsoluteReorderTaskDto();
       request.position = TaskPosition.First;
 
       const reorderTaskSpy = jest
@@ -236,7 +236,7 @@ describe('TaskController', () => {
 
     it('should propagate exception if failed', async () => {
       const taskId = -1;
-      const request = new AbsoluteReorderRequest();
+      const request = new AbsoluteReorderTaskDto();
       request.position = TaskPosition.First;
 
       const reorderTaskSpy = jest
