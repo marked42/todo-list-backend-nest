@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -15,12 +16,8 @@ import { CreateTaskDto } from '../dto/CreateTaskDto';
 import { UpdateTaskDto } from '../dto/UpdateTaskDto';
 import { CreateTaskListDto } from '../dto/CreateTaskListDto';
 import { TaskMoveResult, TaskPosition } from '../model';
-import {
-  AbsoluteReorderTaskDto,
-  RelativeReorderTaskDto,
-  ReorderTaskDto,
-} from '../dto/ReorderTaskDto';
-import { MoveTaskDto } from '../dto/MoveTaskDto';
+import { RelativeReorderTaskDto, ReorderTaskDto } from '../dto/ReorderTaskDto';
+import { MoveTaskDto, RelativeMoveTaskDto } from '../dto/MoveTaskDto';
 import { DEFAULT_TASK_ORDER, QueryTaskDto } from '../dto/QueryTaskDto';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -139,6 +136,108 @@ export class TaskService {
     return this.taskRepo.save(task);
   }
 
+  private async getMoveToLastTasks(task: Task, dto: MoveTaskDto) {
+    const lastTaskInList = await this.taskRepo.findOne({
+      where: {
+        taskList: { id: dto.taskListId },
+        creator: { id: this.userId },
+      },
+      order: {
+        order: 'DESC',
+      },
+    });
+
+    task.taskList = { id: dto.taskListId } as TaskList;
+    task.order = lastTaskInList ? lastTaskInList.order + 1 : 0;
+    return [task];
+  }
+
+  private async getMoveToFirstTasks(task: Task, dto: MoveTaskDto) {
+    const lastTaskInList = await this.taskRepo.findOne({
+      where: {
+        taskList: { id: dto.taskListId },
+        creator: { id: this.userId },
+      },
+      order: {
+        order: 'ASC',
+      },
+    });
+
+    task.taskList = { id: dto.taskListId } as TaskList;
+    task.order = lastTaskInList ? lastTaskInList.order - 1 : 0;
+    return [task];
+  }
+
+  private async getMoveTaskAffectTasks(task: Task, dto: MoveTaskDto) {
+    if (dto.position === TaskPosition.Last) {
+      return this.getMoveToLastTasks(task, dto);
+    }
+    if (dto.position === TaskPosition.First) {
+      return this.getMoveToFirstTasks(task, dto);
+    }
+    return this.getRelativeMoveAffectedTasks(task, dto as RelativeMoveTaskDto);
+  }
+
+  private async getRelativeMoveAffectedTasks(
+    task: Task,
+    dto: RelativeMoveTaskDto,
+  ) {
+    const anchorTask = await this.validateTask(dto.anchorTaskId);
+    if (anchorTask.taskListId !== dto.taskListId) {
+      throw new BadRequestException(
+        `Anchor task with ID ${dto.anchorTaskId} is not in target task list with ID ${dto.taskListId}`,
+      );
+    }
+
+    const allTasks = await this.taskRepo.find({
+      where: {
+        creator: { id: this.userId },
+        taskList: { id: dto.taskListId },
+      },
+      order: { order: 'ASC' },
+    });
+
+    const anchorTaskIndex = allTasks.findIndex((t) => t.id === anchorTask.id);
+
+    const insertionIndex =
+      dto.position === TaskPosition.Before
+        ? anchorTaskIndex
+        : anchorTaskIndex + 1;
+
+    const { changedTasks, startOrder } = this.getFewerHalfTasks(
+      task,
+      allTasks,
+      insertionIndex,
+    );
+
+    changedTasks.forEach((t, index) => {
+      t.order = startOrder + index;
+    });
+
+    return changedTasks;
+  }
+
+  private getFewerHalfTasks(
+    task: Task,
+    allTasks: Task[],
+    insertionIndex: number,
+  ) {
+    const aboveTasksCount = insertionIndex;
+    const belowTasksCount = allTasks.length - aboveTasksCount;
+
+    if (belowTasksCount <= aboveTasksCount) {
+      return {
+        changedTasks: [task, ...allTasks.slice(insertionIndex)],
+        startOrder: allTasks[insertionIndex].order,
+      };
+    }
+
+    return {
+      changedTasks: [...allTasks.slice(0, insertionIndex), task],
+      startOrder: allTasks[0].order - 1,
+    };
+  }
+
   /**
    * move task to another task list
    */
@@ -147,23 +246,11 @@ export class TaskService {
     if (task.taskListId === dto.taskListId) {
       return TaskMoveResult.AlreadyInPlace;
     }
-    const targetTaskList = await this.validateTaskList(dto.taskListId);
 
-    const lastTaskInList = await this.taskRepo.findOne({
-      where: {
-        taskList: { id: targetTaskList.id },
-        creator: { id: this.userId },
-      },
-      order: {
-        order: 'DESC',
-      },
-    });
+    await this.validateTaskList(dto.taskListId);
+    const affectedTasks = await this.getMoveTaskAffectTasks(task, dto);
 
-    task.taskList = targetTaskList;
-    // at last by default
-    task.order = lastTaskInList ? lastTaskInList.order + 1 : 0;
-
-    await this.taskRepo.save(task);
+    await this.taskRepo.save(affectedTasks);
     return TaskMoveResult.Success;
   }
 
@@ -197,7 +284,7 @@ export class TaskService {
     taskId: number,
     options: {
       getAnchorTask: (task: Task) => Promise<Task | null>;
-      getNewOrder: (task: Task | null) => Promise<number>;
+      getNewOrder: (task: Task | null) => number;
     },
   ) {
     const { getAnchorTask, getNewOrder } = options;
@@ -207,9 +294,9 @@ export class TaskService {
       isAlreadyInPlace: (task, anchorTask) => {
         return task.id === anchorTask?.id;
       },
-      getAffectedTasks: async (task, anchorTask) => {
-        task.order = await getNewOrder(anchorTask);
-        return [task];
+      getAffectedTasks: (task, anchorTask) => {
+        task.order = getNewOrder(anchorTask);
+        return Promise.resolve([task]);
       },
     });
   }
@@ -226,7 +313,7 @@ export class TaskService {
         });
         return lastTask;
       },
-      getNewOrder: async (anchorTask: Task | null) => {
+      getNewOrder: (anchorTask: Task | null) => {
         return anchorTask ? anchorTask.order - 1 : 0;
       },
     });
@@ -244,7 +331,7 @@ export class TaskService {
         });
         return lastTask;
       },
-      async getNewOrder(anchorTask: Task) {
+      getNewOrder(anchorTask: Task) {
         return anchorTask ? anchorTask.order + 1 : 0;
       },
     });
@@ -268,8 +355,7 @@ export class TaskService {
     const { isAlreadyInPlace, getChangedTasks } = options;
     return this.doReorder(taskId, {
       getAnchorTask: async () => {
-        const anchorTask = await this.validateTask(anchorTaskId);
-        return anchorTask;
+        return this.validateTask(anchorTaskId);
       },
       isAlreadyInPlace: (task: Task, anchorTask: Task) => {
         const isSameTask = task.id === anchorTask?.id;

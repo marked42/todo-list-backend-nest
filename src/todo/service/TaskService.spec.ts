@@ -20,7 +20,7 @@ import {
   TaskPosition,
   TaskStatus,
 } from '../model';
-import { RelativeMoveTaskDto } from '../dto/MoveTaskDto';
+import { MoveTaskDto, RelativeMoveTaskDto } from '../dto/MoveTaskDto';
 import { QueryTaskDto } from '../dto/QueryTaskDto';
 
 const getEntityId = (entity: { id: number }) => entity.id;
@@ -543,82 +543,256 @@ describe('TaskService', () => {
     });
 
     describe('move task to another task list', () => {
-      it('should move a task to another task list', async () => {
-        const { id: taskId, taskListId } = db.firstOwnedTask;
+      describe('move to first place', () => {
+        it('should move a task to another task list', async () => {
+          const { id: taskId, taskListId } = db.firstOwnedTask;
 
-        const anotherUserTaskList = db.ownedTaskLists.find(
-          (taskList) => taskList.id !== taskListId,
-        );
-        if (!anotherUserTaskList) {
-          throw new Error('user has no another task list');
-        }
+          const anotherUserTaskList = db.ownedTaskLists.find(
+            (taskList) => taskList.id !== taskListId,
+          );
+          if (!anotherUserTaskList) {
+            throw new Error('user has no another task list');
+          }
 
-        const dto = new RelativeMoveTaskDto();
-        dto.taskListId = anotherUserTaskList.id;
+          const dto = {
+            taskListId: anotherUserTaskList.id,
+            position: TaskPosition.First,
+          } as MoveTaskDto;
 
-        const result = await service.moveTask(taskId, dto);
-        expect(result).toEqual(TaskMoveResult.Success);
+          const result = await service.moveTask(taskId, dto);
+          expect(result).toEqual(TaskMoveResult.Success);
 
-        const lastTask = await taskRepo.findOne({
-          where: {
-            taskList: { id: dto.taskListId },
-            creator: { id: mockCurrentUser.id },
-          },
-          order: {
-            order: 'DESC',
-          },
+          const firstTask = await taskRepo.findOne({
+            where: {
+              taskList: { id: dto.taskListId },
+              creator: { id: mockCurrentUser.id },
+            },
+            order: {
+              order: 'ASC',
+            },
+          });
+          if (!firstTask) {
+            throw new Error('first task not found');
+          }
+
+          expect(firstTask.id).toEqual(taskId);
+          expect(firstTask.taskListId).toEqual(anotherUserTaskList.id);
         });
-        if (!lastTask) {
-          throw new Error('last task not found');
-        }
 
-        expect(lastTask.id).toEqual(taskId);
-        expect(lastTask.taskListId).toEqual(anotherUserTaskList.id);
+        it('should move a task to another empty task list', async () => {
+          const { id: taskId, taskListId } = db.firstOwnedTask;
+
+          const anotherUserTaskList = db.ownedTaskLists.find(
+            (taskList) => taskList.id !== taskListId,
+          );
+          if (!anotherUserTaskList) {
+            throw new Error('user has no another task list');
+          }
+
+          const dto = {
+            taskListId: anotherUserTaskList.id,
+            position: TaskPosition.First,
+          } as MoveTaskDto;
+
+          const result = await service.moveTask(taskId, dto);
+          expect(result).toEqual(TaskMoveResult.Success);
+
+          const firstTask = await taskRepo.findOne({
+            where: {
+              taskList: { id: dto.taskListId },
+              creator: { id: mockCurrentUser.id },
+            },
+            order: {
+              order: 'ASC',
+            },
+          });
+          if (!firstTask) {
+            throw new Error('first task not found');
+          }
+
+          expect(firstTask.id).toEqual(taskId);
+          expect(firstTask.taskListId).toEqual(anotherUserTaskList.id);
+        });
+
+        it('should not move a task if it is already in the target task list', async () => {
+          const { id: taskId, taskListId } = db.firstOwnedTask;
+          const dto = {
+            taskListId,
+            position: TaskPosition.First,
+          } as MoveTaskDto;
+
+          const result = await service.moveTask(taskId, dto);
+          expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
+        });
+
+        it('should throw NotFoundException when moving a non-existent task', async () => {
+          const taskId = -1;
+          const dto = {
+            taskListId: 3,
+            position: TaskPosition.First,
+          } as MoveTaskDto;
+          await expect(service.moveTask(taskId, dto)).rejects.toThrow(
+            `Task with ID ${taskId} not found`,
+          );
+        });
+
+        it('should throw ForbiddenException when moving a task not owned by user', async () => {
+          const { id: taskId } = db.firstUnownedTask;
+          const dto = {
+            taskListId: -1,
+            position: TaskPosition.First,
+          } as MoveTaskDto;
+          await expect(service.moveTask(taskId, dto)).rejects.toThrow(
+            `Task with ID ${taskId} not owned by user ${mockCurrentUser.id}`,
+          );
+        });
+
+        it('should throw NotFoundException when moving to a non-existent task list', async () => {
+          const { id: taskId } = db.firstOwnedTask;
+          const dto = {
+            taskListId: -1,
+            position: TaskPosition.First,
+          } as MoveTaskDto;
+          await expect(service.moveTask(taskId, dto)).rejects.toThrow(
+            `Task list with ID ${dto.taskListId} not found`,
+          );
+        });
+
+        it('should throw ForbiddenException when moving to a task list not owned by user', async () => {
+          const { id: taskId } = db.firstOwnedTask;
+          const dto = {
+            taskListId: db.firstUnownedTaskList.id,
+            position: TaskPosition.First,
+          } as MoveTaskDto;
+          await expect(service.moveTask(taskId, dto)).rejects.toThrow(
+            `Task list with ID ${dto.taskListId} not owned by user ${mockCurrentUser.id}`,
+          );
+        });
       });
 
-      it('should not move a task if it is already in the target task list', async () => {
-        const { id: taskId, taskListId } = db.firstOwnedTask;
-        const dto = new RelativeMoveTaskDto();
-        dto.taskListId = taskListId;
+      describe('move to last place', () => {
+        it('should move a task to another task list', async () => {
+          const { id: taskId, taskListId } = db.firstOwnedTask;
 
-        const result = await service.moveTask(taskId, dto);
-        expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
+          const anotherUserTaskList = db.ownedTaskLists.find(
+            (taskList) => taskList.id !== taskListId,
+          );
+          if (!anotherUserTaskList) {
+            throw new Error('user has no another task list');
+          }
+
+          const dto = {
+            taskListId: anotherUserTaskList.id,
+            position: TaskPosition.Last,
+          } as MoveTaskDto;
+
+          const result = await service.moveTask(taskId, dto);
+          expect(result).toEqual(TaskMoveResult.Success);
+
+          const lastTask = await taskRepo.findOne({
+            where: {
+              taskList: { id: dto.taskListId },
+              creator: { id: mockCurrentUser.id },
+            },
+            order: {
+              order: 'DESC',
+            },
+          });
+          if (!lastTask) {
+            throw new Error('last task not found');
+          }
+
+          expect(lastTask.id).toEqual(taskId);
+          expect(lastTask.taskListId).toEqual(anotherUserTaskList.id);
+        });
+
+        it('should not move a task if it is already in the target task list', async () => {
+          const { id: taskId, taskListId } = db.firstOwnedTask;
+          const dto = {
+            taskListId,
+            position: TaskPosition.Last,
+          } as MoveTaskDto;
+
+          const result = await service.moveTask(taskId, dto);
+          expect(result).toEqual(TaskMoveResult.AlreadyInPlace);
+        });
+
+        it('should throw NotFoundException when moving a non-existent task', async () => {
+          const taskId = -1;
+          const dto = {
+            taskListId: 3,
+            position: TaskPosition.Last,
+          } as MoveTaskDto;
+          await expect(service.moveTask(taskId, dto)).rejects.toThrow(
+            `Task with ID ${taskId} not found`,
+          );
+        });
+
+        it('should throw ForbiddenException when moving a task not owned by user', async () => {
+          const { id: taskId } = db.firstUnownedTask;
+          const dto = {
+            taskListId: -1,
+            position: TaskPosition.Last,
+          } as MoveTaskDto;
+          await expect(service.moveTask(taskId, dto)).rejects.toThrow(
+            `Task with ID ${taskId} not owned by user ${mockCurrentUser.id}`,
+          );
+        });
+
+        it('should throw NotFoundException when moving to a non-existent task list', async () => {
+          const { id: taskId } = db.firstOwnedTask;
+          const dto = {
+            taskListId: -1,
+            position: TaskPosition.Last,
+          } as MoveTaskDto;
+          await expect(service.moveTask(taskId, dto)).rejects.toThrow(
+            `Task list with ID ${dto.taskListId} not found`,
+          );
+        });
+
+        it('should throw ForbiddenException when moving to a task list not owned by user', async () => {
+          const { id: taskId } = db.firstOwnedTask;
+          const dto = {
+            taskListId: db.firstUnownedTaskList.id,
+            position: TaskPosition.Last,
+          } as MoveTaskDto;
+          await expect(service.moveTask(taskId, dto)).rejects.toThrow(
+            `Task list with ID ${dto.taskListId} not owned by user ${mockCurrentUser.id}`,
+          );
+        });
       });
 
-      it('should throw NotFoundException when moving a non-existent task', async () => {
-        const taskId = -1;
-        const dto = new RelativeMoveTaskDto();
-        dto.taskListId = 3;
-        await expect(service.moveTask(taskId, dto)).rejects.toThrow(
-          `Task with ID ${taskId} not found`,
-        );
-      });
-
-      it('should throw ForbiddenException when moving a task not owned by user', async () => {
-        const { id: taskId } = db.firstUnownedTask;
-        const dto = new RelativeMoveTaskDto();
-        dto.taskListId = -1;
-        await expect(service.moveTask(taskId, dto)).rejects.toThrow(
-          `Task with ID ${taskId} not owned by user ${mockCurrentUser.id}`,
-        );
-      });
-
-      it('should throw NotFoundException when moving to a non-existent task list', async () => {
-        const { id: taskId } = db.firstOwnedTask;
-        const dto = new RelativeMoveTaskDto();
-        dto.taskListId = -1;
-        await expect(service.moveTask(taskId, dto)).rejects.toThrow(
-          `Task list with ID ${dto.taskListId} not found`,
-        );
-      });
-
-      it('should throw ForbiddenException when moving to a task list not owned by user', async () => {
-        const { id: taskId } = db.firstOwnedTask;
-        const dto = new RelativeMoveTaskDto();
-        dto.taskListId = db.firstUnownedTaskList.id;
-        await expect(service.moveTask(taskId, dto)).rejects.toThrow(
-          `Task list with ID ${dto.taskListId} not owned by user ${mockCurrentUser.id}`,
-        );
+      describe('move to before', () => {
+        // it('should move a task to before', async () => {
+        //   const { id: taskId, taskListId } = db.firstOwnedTask;
+        //   const anotherUserTaskList = db.ownedTaskLists.find(
+        //     (taskList) => taskList.id !== taskListId,
+        //   );
+        //   if (!anotherUserTaskList) {
+        //     throw new Error('user has no another task list');
+        //   }
+        //   const dto = {
+        //     taskListId: anotherUserTaskList.id,
+        //     position: TaskPosition.Before,
+        //     anchorTaskId: 1,
+        //   } as MoveTaskDto;
+        //   const result = await service.moveTask(taskId, dto);
+        //   expect(result).toEqual(TaskMoveResult.Success);
+        //   const firstTask = await taskRepo.findOne({
+        //     where: {
+        //       taskList: { id: dto.taskListId },
+        //       creator: { id: mockCurrentUser.id },
+        //     },
+        //     order: {
+        //       order: 'ASC',
+        //     },
+        //   });
+        //   if (!firstTask) {
+        //     throw new Error('first task not found');
+        //   }
+        //   expect(firstTask.id).toEqual(taskId);
+        //   expect(firstTask.taskListId).toEqual(anotherUserTaskList.id);
+        // });
       });
     });
 
