@@ -15,7 +15,11 @@ import { CreateTaskDto } from '../dto/CreateTaskDto';
 import { UpdateTaskDto } from '../dto/UpdateTaskDto';
 import { CreateTaskListDto } from '../dto/CreateTaskListDto';
 import { TaskMoveResult, TaskPosition } from '../model';
-import { ReorderTaskDto } from '../dto/ReorderTaskDto';
+import {
+  AbsoluteReorderTaskDto,
+  RelativeReorderTaskDto,
+  ReorderTaskDto,
+} from '../dto/ReorderTaskDto';
 import { MoveTaskDto } from '../dto/MoveTaskDto';
 import { DEFAULT_TASK_ORDER, QueryTaskDto } from '../dto/QueryTaskDto';
 
@@ -163,135 +167,245 @@ export class TaskService {
     return TaskMoveResult.Success;
   }
 
-  private async reorderToFirst(taskId: number) {
+  private async doReorder(
+    taskId: number,
+    options: {
+      getAnchorTask: (task: Task) => Promise<Task | null>;
+      isAlreadyInPlace: (task: Task, anchorTask: Task | null) => boolean;
+      getAffectedTasks: (
+        task: Task,
+        anchorTask: Task | null,
+      ) => Promise<Task[]>;
+    },
+  ) {
     const task = await this.validateTask(taskId);
 
-    const firstTask = await this.taskRepo.findOne({
-      where: {
-        creator: { id: this.userId },
-        taskList: { id: task.taskListId },
-      },
-      order: { order: 'ASC' },
-    });
+    const { isAlreadyInPlace, getAffectedTasks, getAnchorTask } = options;
 
-    if (firstTask?.id === taskId) {
+    const anchorTask = await getAnchorTask(task);
+    if (isAlreadyInPlace(task, anchorTask)) {
       return TaskMoveResult.AlreadyInPlace;
     }
 
-    // TODO: may underflow
-    const newOrder = firstTask ? firstTask.order - 1 : 0;
-    task.order = newOrder;
+    const affectedTasks = await getAffectedTasks(task, anchorTask);
+    await this.taskRepo.save(affectedTasks);
 
-    await this.taskRepo.save(task);
     return TaskMoveResult.Success;
   }
 
-  private async reorderToLast(taskId: number) {
-    const task = await this.validateTask(taskId);
+  private async doReorderAbsolutely(
+    taskId: number,
+    options: {
+      getAnchorTask: (task: Task) => Promise<Task | null>;
+      getNewOrder: (task: Task | null) => Promise<number>;
+    },
+  ) {
+    const { getAnchorTask, getNewOrder } = options;
 
-    const lastTask = await this.taskRepo.findOne({
-      where: {
-        creator: { id: this.userId },
-        taskList: { id: task.taskListId },
+    return this.doReorder(taskId, {
+      getAnchorTask,
+      isAlreadyInPlace: (task, anchorTask) => {
+        return task.id === anchorTask?.id;
       },
-      order: { order: 'DESC' },
+      getAffectedTasks: async (task, anchorTask) => {
+        task.order = await getNewOrder(anchorTask);
+        return [task];
+      },
     });
+  }
 
-    if (lastTask?.id === taskId) {
-      return TaskMoveResult.AlreadyInPlace;
-    }
+  private async doReorderToFirst(taskId: number) {
+    return this.doReorderAbsolutely(taskId, {
+      getAnchorTask: async (task: Task) => {
+        const lastTask = await this.taskRepo.findOne({
+          where: {
+            creator: { id: this.userId },
+            taskList: { id: task.taskListId },
+          },
+          order: { order: 'ASC' },
+        });
+        return lastTask;
+      },
+      getNewOrder: async (anchorTask: Task | null) => {
+        return anchorTask ? anchorTask.order - 1 : 0;
+      },
+    });
+  }
 
-    // TODO: may overflow
-    const newOrder = lastTask ? lastTask.order + 1 : 0;
-    task.order = newOrder;
+  private async doReorderToLast(taskId: number) {
+    return this.doReorderAbsolutely(taskId, {
+      getAnchorTask: async (task: Task) => {
+        const lastTask = await this.taskRepo.findOne({
+          where: {
+            creator: { id: this.userId },
+            taskList: { id: task.taskListId },
+          },
+          order: { order: 'DESC' },
+        });
+        return lastTask;
+      },
+      async getNewOrder(anchorTask: Task) {
+        return anchorTask ? anchorTask.order + 1 : 0;
+      },
+    });
+  }
 
-    await this.taskRepo.save(task);
-    return TaskMoveResult.Success;
+  private async doReorderRelatively(
+    taskId: number,
+    anchorTaskId: number,
+    options: {
+      isAlreadyInPlace: (task: Task, anchorTask: Task) => boolean;
+      getChangedTasks: (data: {
+        tasks: Task[];
+        task: Task;
+        taskOrder: number;
+        taskIndex: number;
+        anchorTaskOrder: number;
+        anchorTaskIndex: number;
+      }) => { changedTasks: Task[]; startOrder: number };
+    },
+  ) {
+    const { isAlreadyInPlace, getChangedTasks } = options;
+    return this.doReorder(taskId, {
+      getAnchorTask: async () => {
+        const anchorTask = await this.validateTask(anchorTaskId);
+        return anchorTask;
+      },
+      isAlreadyInPlace: (task: Task, anchorTask: Task) => {
+        const isSameTask = task.id === anchorTask?.id;
+        return isSameTask || isAlreadyInPlace(task, anchorTask);
+      },
+      getAffectedTasks: async (task: Task, anchorTask: Task) => {
+        const tasks = await this.taskRepo.find({
+          where: {
+            creator: { id: this.userId },
+            taskList: { id: task.taskListId },
+          },
+          order: { order: 'ASC' },
+        });
+
+        const taskOrder = task.order;
+        const taskIndex = tasks.findIndex((t) => t.id === taskId);
+        const anchorTaskOrder = anchorTask.order;
+        const anchorTaskIndex = tasks.findIndex((t) => t.id === anchorTaskId);
+
+        const { changedTasks, startOrder } = getChangedTasks({
+          tasks,
+          task,
+          taskOrder,
+          taskIndex,
+          anchorTaskOrder,
+          anchorTaskIndex,
+        });
+
+        changedTasks.forEach((t, index) => {
+          t.order = startOrder + index;
+        });
+
+        return changedTasks;
+      },
+    });
+  }
+
+  private doReorderToBefore(taskId: number, anchorTaskId: number) {
+    return this.doReorderRelatively(taskId, anchorTaskId, {
+      isAlreadyInPlace: (task, anchorTask) => {
+        return task.order === anchorTask.order - 1;
+      },
+      getChangedTasks(data) {
+        const {
+          tasks,
+          task,
+          taskOrder,
+          taskIndex,
+          anchorTaskOrder,
+          anchorTaskIndex,
+        } = data;
+
+        if (taskOrder > anchorTaskOrder) {
+          return {
+            changedTasks: [task, ...tasks.slice(anchorTaskIndex, taskIndex)],
+            startOrder: anchorTaskOrder,
+          };
+        }
+
+        if (taskOrder < anchorTaskOrder) {
+          return {
+            changedTasks: [
+              ...tasks.slice(taskIndex + 1, anchorTaskIndex),
+              task,
+            ],
+            startOrder: taskOrder,
+          };
+        }
+        throw new ForbiddenException('Impossible case: task orders are equal');
+      },
+    });
+  }
+
+  private doReorderToAfter(taskId: number, anchorTaskId: number) {
+    return this.doReorderRelatively(taskId, anchorTaskId, {
+      isAlreadyInPlace: (task, anchorTask) => {
+        return task.order === anchorTask.order + 1;
+      },
+      getChangedTasks(data) {
+        const {
+          tasks,
+          task,
+          taskOrder,
+          taskIndex,
+          anchorTaskOrder,
+          anchorTaskIndex,
+        } = data;
+
+        if (taskOrder > anchorTaskOrder) {
+          return {
+            changedTasks: [
+              task,
+              ...tasks.slice(anchorTaskIndex + 1, taskIndex),
+            ],
+            startOrder: anchorTaskOrder + 1,
+          };
+        }
+
+        if (taskOrder < anchorTaskOrder) {
+          return {
+            changedTasks: [
+              ...tasks.slice(taskIndex + 1, anchorTaskIndex + 1),
+              task,
+            ],
+            startOrder: taskOrder,
+          };
+        }
+        throw new ForbiddenException('Impossible case: task orders are equal');
+      },
+    });
   }
 
   /**
    * reorder task to different position in same task list
    */
   async reorderTask(taskId: number, dto: ReorderTaskDto) {
-    // TODO: refactor to template method
-    if (dto.position === TaskPosition.First) {
-      return this.reorderToFirst(taskId);
+    const strategies = {
+      [TaskPosition.First]: () => this.doReorderToFirst(taskId),
+      [TaskPosition.Last]: () => this.doReorderToLast(taskId),
+      [TaskPosition.Before]: () =>
+        this.doReorderToBefore(
+          taskId,
+          (dto as RelativeReorderTaskDto).anchorTaskId,
+        ),
+      [TaskPosition.After]: () =>
+        this.doReorderToAfter(
+          taskId,
+          (dto as RelativeReorderTaskDto).anchorTaskId,
+        ),
+    };
+    const strategy = strategies[dto.position];
+    if (strategy) {
+      return strategy();
     }
 
-    if (dto.position === TaskPosition.Last) {
-      return this.reorderToLast(taskId);
-    }
-
-    if (
-      !(
-        dto.position === TaskPosition.Before ||
-        dto.position === TaskPosition.After
-      )
-    ) {
-      return;
-    }
-    const { anchorTaskId } = dto;
-    const { position } = dto;
-
-    if (taskId === anchorTaskId) {
-      return TaskMoveResult.AlreadyInPlace;
-    }
-
-    const task = await this.validateTask(taskId);
-    const anchorTask = await this.validateTask(anchorTaskId);
-
-    const beforeAnchorTask =
-      position === TaskPosition.Before && task.order === anchorTask.order - 1;
-    const afterAnchorTask =
-      position === TaskPosition.After && task.order === anchorTask.order + 1;
-    const alreadyInPlace = beforeAnchorTask || afterAnchorTask;
-    if (alreadyInPlace) {
-      return TaskMoveResult.AlreadyInPlace;
-    }
-
-    const tasks = await this.taskRepo.find({
-      where: {
-        creator: { id: this.userId },
-        taskList: { id: task.taskListId },
-      },
-      order: { order: 'ASC' },
-    });
-    const taskOrder = task.order;
-    const taskIndex = tasks.findIndex((t) => t.id === taskId);
-    const anchorTaskOrder = anchorTask.order;
-    const anchorTaskIndex = tasks.findIndex((t) => t.id === anchorTaskId);
-
-    let changedTasks = [] as Task[];
-    let startOrder = 0;
-    if (taskOrder > anchorTaskOrder) {
-      if (position === TaskPosition.Before) {
-        changedTasks = [task, ...tasks.slice(anchorTaskIndex, taskIndex)];
-        startOrder = anchorTaskOrder;
-      } else if (position === TaskPosition.After) {
-        changedTasks = [task, ...tasks.slice(anchorTaskIndex + 1, taskIndex)];
-        startOrder = anchorTaskOrder + 1;
-      }
-    } else if (taskOrder < anchorTaskOrder) {
-      if (position === TaskPosition.Before) {
-        changedTasks = [...tasks.slice(taskIndex + 1, anchorTaskIndex), task];
-        startOrder = taskOrder;
-      } else if (position === TaskPosition.After) {
-        changedTasks = [
-          ...tasks.slice(taskIndex + 1, anchorTaskIndex + 1),
-          task,
-        ];
-        startOrder = taskOrder;
-      }
-    } else {
-      throw new ForbiddenException('Impossible case: task orders are equal');
-    }
-
-    changedTasks.forEach((t, index) => {
-      t.order = startOrder + index;
-    });
-
-    await this.taskRepo.save(changedTasks);
-    return TaskMoveResult.Success;
+    throw new Error(`Invalid position ${dto.position}`);
   }
 
   private async findTaskOrThrow(taskId: number) {
