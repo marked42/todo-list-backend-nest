@@ -56,7 +56,6 @@ export class TaskController {
     };
   }
 
-  // TODO: specify order
   @Post('/:id/move')
   async moveTask(
     @Param('id', new ParseIntPipe({ optional: false })) taskId: number,
