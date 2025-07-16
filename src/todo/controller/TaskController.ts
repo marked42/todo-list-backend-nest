@@ -65,6 +65,10 @@ export class TaskController {
   ) {
     const moved = await this.taskService.moveTask(taskId, dto);
 
+    // return data;
+    // return { data, message: '' };
+    // return { code: 0, data: null, message: '' };
+
     switch (moved) {
       case TaskMoveResult.AlreadyInPlace:
         return {

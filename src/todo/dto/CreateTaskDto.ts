@@ -12,7 +12,6 @@ export class CreateTaskDto {
   })
   name: string;
 
-  // TODO: varchar limit
   @ApiProperty()
   @IsString()
   @MaxLength(2000, {
