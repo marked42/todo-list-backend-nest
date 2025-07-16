@@ -182,13 +182,6 @@ export class TaskService {
     task: Task,
     dto: RelativeMoveTaskDto,
   ) {
-    const anchorTask = await this.validateTask(dto.anchorTaskId);
-    if (anchorTask.taskListId !== dto.taskListId) {
-      throw new BadRequestException(
-        `Anchor task with ID ${dto.anchorTaskId} is not in target task list with ID ${dto.taskListId}`,
-      );
-    }
-
     const allTasks = await this.taskRepo.find({
       where: {
         creator: { id: this.userId },
@@ -197,12 +190,29 @@ export class TaskService {
       order: { order: 'ASC' },
     });
 
+    if (allTasks.length === 0) {
+      task.order = 0;
+      // move to list
+      task.taskList = { ...task.taskList, id: dto.taskListId } as TaskList;
+      return [task];
+    }
+
+    const anchorTask = await this.validateTask(dto.anchorTaskId);
+    if (anchorTask.taskListId !== dto.taskListId) {
+      throw new BadRequestException(
+        `Anchor task with ID ${dto.anchorTaskId} is not in target task list with ID ${dto.taskListId}`,
+      );
+    }
+
     const anchorTaskIndex = allTasks.findIndex((t) => t.id === anchorTask.id);
 
     const insertionIndex =
       dto.position === TaskPosition.Before
         ? anchorTaskIndex
         : anchorTaskIndex + 1;
+
+    // move to list
+    task.taskList = { ...task.taskList, id: dto.taskListId } as TaskList;
 
     const { changedTasks, startOrder } = this.getFewerHalfTasks(
       task,
