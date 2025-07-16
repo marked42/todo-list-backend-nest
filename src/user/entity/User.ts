@@ -14,7 +14,7 @@ export class User extends BaseEntity {
     joinColumns: [{ name: 'user_id' }],
     inverseJoinColumns: [{ name: 'role_id' }],
   })
-  roles: string[];
+  roles?: Role[];
 
   @Column({
     name: 'encrypted_password',

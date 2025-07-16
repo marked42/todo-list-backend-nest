@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from '../entity/User';
 import { CreateUserDto } from '../dto/CreateUserDto';
+import { RoleCode } from '../entity/Role';
 
 @Injectable()
 export class UserService {
@@ -32,5 +33,14 @@ export class UserService {
 
     const saved = await this.userRepository.save(user);
     return saved;
+  }
+
+  async isAdmin(id: number) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles'],
+    });
+
+    return !!user?.roles?.find((role) => role.code === RoleCode.Admin);
   }
 }
