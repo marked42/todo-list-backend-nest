@@ -87,8 +87,6 @@ describe('ResponseInterceptor', () => {
     });
   });
 
-  // TODO: should not transform
-  // TODO: exception
   describe('should keep standard response', () => {
     const testCases = [
       ['complete', resp({ data: 1 })],
