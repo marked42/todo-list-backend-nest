@@ -35,10 +35,11 @@ describe('TaskController', () => {
   describe('createTask', () => {
     it('should create a task', async () => {
       const taskListId = 1;
-      const dto = new CreateTaskDto();
-      dto.name = 'New Task';
-      dto.content = '';
-      dto.taskListId = taskListId;
+      const dto = {
+        name: 'New Task',
+        content: '',
+        taskListId,
+      } as CreateTaskDto;
 
       const mockTask = {
         id: 1,
@@ -58,10 +59,11 @@ describe('TaskController', () => {
 
     it('should propagate exception if creation failed', async () => {
       const taskListId = 1;
-      const dto = new CreateTaskDto();
-      dto.name = 'New Task';
-      dto.content = '';
-      dto.taskListId = taskListId;
+      const dto = {
+        name: 'New Task',
+        content: '',
+        taskListId,
+      } as CreateTaskDto;
 
       const createTaskSpy = jest
         .spyOn(taskService, 'createTask')
@@ -109,8 +111,7 @@ describe('TaskController', () => {
   describe('updateTask', () => {
     it('should update a task', async () => {
       const taskId = 1;
-      const dto = new UpdateTaskDto();
-      dto.name = 'Updated Task';
+      const dto = { name: 'Updated Task' } as UpdateTaskDto;
 
       const updateTaskSpy = jest
         .spyOn(taskService, 'updateTask')
@@ -129,8 +130,7 @@ describe('TaskController', () => {
 
     it('should propagate exception if update failed', async () => {
       const taskId = -1;
-      const dto = new UpdateTaskDto();
-      dto.name = 'Updated Task';
+      const dto = { name: 'Updated Task' } as UpdateTaskDto;
 
       const updateTaskSpy = jest
         .spyOn(taskService, 'updateTask')
@@ -152,8 +152,7 @@ describe('TaskController', () => {
       const moveTaskSpy = jest
         .spyOn(taskService, 'moveTask')
         .mockResolvedValue(TaskMoveResult.Success);
-      const dto = new AbsoluteMoveTaskDto();
-      dto.taskListId = 3;
+      const dto = { taskListId: 3 } as AbsoluteMoveTaskDto;
 
       const result = await controller.moveTask(taskId, dto);
       expect(moveTaskSpy).toHaveBeenCalledWith(taskId, dto);
@@ -165,9 +164,8 @@ describe('TaskController', () => {
 
     it('should return successfully if task is already in the target task list', async () => {
       const taskId = 1;
-      const dto = new AbsoluteMoveTaskDto();
       // Same as current task list id
-      dto.taskListId = 1;
+      const dto = { taskListId: 1 } as AbsoluteMoveTaskDto;
 
       const moveTaskSpy = jest
         .spyOn(taskService, 'moveTask')
@@ -183,8 +181,7 @@ describe('TaskController', () => {
 
     it('should propagate exception if failed', async () => {
       const taskId = -1;
-      const dto = new AbsoluteMoveTaskDto();
-      dto.taskListId = 3;
+      const dto = { taskListId: 3 } as AbsoluteMoveTaskDto;
 
       const moveTaskSpy = jest
         .spyOn(taskService, 'moveTask')
@@ -206,8 +203,7 @@ describe('TaskController', () => {
       const reorderTaskSpy = jest
         .spyOn(taskService, 'reorderTask')
         .mockResolvedValue(TaskMoveResult.Success);
-      const dto = new AbsoluteReorderTaskDto();
-      dto.position = TaskPosition.First;
+      const dto = { position: TaskPosition.First } as AbsoluteReorderTaskDto;
 
       const result = await controller.reorderTask(taskId, dto);
       expect(reorderTaskSpy).toHaveBeenCalledWith(taskId, dto);
@@ -219,8 +215,7 @@ describe('TaskController', () => {
 
     it('should return successfully if task is already in place', async () => {
       const taskId = 1;
-      const dto = new AbsoluteReorderTaskDto();
-      dto.position = TaskPosition.First;
+      const dto = { position: TaskPosition.First } as AbsoluteReorderTaskDto;
 
       const reorderTaskSpy = jest
         .spyOn(taskService, 'reorderTask')
@@ -236,8 +231,7 @@ describe('TaskController', () => {
 
     it('should propagate exception if failed', async () => {
       const taskId = -1;
-      const dto = new AbsoluteReorderTaskDto();
-      dto.position = TaskPosition.First;
+      const dto = { position: TaskPosition.First } as AbsoluteReorderTaskDto;
 
       const reorderTaskSpy = jest
         .spyOn(taskService, 'reorderTask')

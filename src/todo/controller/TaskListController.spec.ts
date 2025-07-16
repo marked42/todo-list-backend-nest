@@ -49,12 +49,12 @@ describe('TaskListController', () => {
 
   describe('createTaskList', () => {
     it('should create task list', async () => {
-      const dto = new CreateTaskListDto();
-      dto.name = 'task-list-1';
+      const dto = { name: 'task-list-1' } as CreateTaskListDto;
 
-      const expectedTaskList = new TaskList();
-      expectedTaskList.name = dto.name;
-      expectedTaskList.creator = { id: mockUser.id } as User;
+      const expectedTaskList = {
+        name: dto.name,
+        creator: { id: mockUser.id } as User,
+      } as TaskList;
 
       const createTaskList = jest
         .spyOn(taskService, 'createTaskList')
@@ -115,9 +115,7 @@ describe('TaskListController', () => {
     it('should rename task list', async () => {
       const taskListId = 1;
       const newName = 'Renamed Task List';
-      const mockTaskList = new TaskList();
-      mockTaskList.id = taskListId;
-      mockTaskList.name = newName;
+      const mockTaskList = { id: taskListId, name: newName } as TaskList;
 
       const renameTaskList = jest
         .spyOn(taskService, 'renameTaskList')
