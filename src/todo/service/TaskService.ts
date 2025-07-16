@@ -7,7 +7,7 @@ import {
   Scope,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { User } from '@/user/entity/User';
 import { CURRENT_USER } from '@/auth/model';
 import { TaskList } from '../entity/TaskList';
@@ -19,6 +19,7 @@ import { TaskMoveResult, TaskPosition } from '../model';
 import { RelativeReorderTaskDto, ReorderTaskDto } from '../dto/ReorderTaskDto';
 import { MoveTaskDto, RelativeMoveTaskDto } from '../dto/MoveTaskDto';
 import { DEFAULT_TASK_ORDER, QueryTaskDto } from '../dto/QueryTaskDto';
+import { UserService } from '@/user/service/UserService';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TaskService {
@@ -26,6 +27,7 @@ export class TaskService {
     @InjectRepository(TaskList) private taskListRepo: Repository<TaskList>,
     @InjectRepository(Task) private taskRepo: Repository<Task>,
     @Inject(CURRENT_USER) private user: User,
+    private userService: UserService,
   ) {}
 
   private get userId() {
@@ -85,14 +87,42 @@ export class TaskService {
   }
 
   async getTasks(dto?: QueryTaskDto) {
-    const { taskListId, order = DEFAULT_TASK_ORDER } = dto || {};
-    // TODO: get other user's tasks with permission checking
-    if (taskListId) {
-      await this.validateTaskList(taskListId);
+    const { taskListId, order = DEFAULT_TASK_ORDER, users } = dto || {};
+    const isAdmin = await this.userService.isAdmin(this.userId);
+
+    const usersSpecified = !!users;
+    const privilegedUsers = (users ?? []).filter(
+      (user) => isAdmin || user === this.userId,
+    );
+    const creatorWhere = {
+      creator: usersSpecified ? In(privilegedUsers) : { id: this.userId },
+    };
+
+    const getTaskListWhere = async () => {
+      if (!taskListId) {
+        return { privileged: true, where: {} };
+      }
+
+      const taskList = await this.taskListRepo.findOne({
+        where: { id: taskListId },
+      });
+
+      const hasPermission = isAdmin || taskList?.creatorId === this.userId;
+      if (hasPermission) {
+        return {
+          privileged: true,
+          where: { taskList: { id: taskListId } },
+        };
+      }
+      return { privileged: false, where: {} };
+    };
+    const { privileged, where: taskListWhere } = await getTaskListWhere();
+    if (!privileged) {
+      return [];
     }
 
     const tasks = await this.taskRepo.find({
-      where: { creator: { id: this.userId }, taskList: { id: taskListId } },
+      where: { ...creatorWhere, ...taskListWhere },
       order: { order },
     });
     return tasks;

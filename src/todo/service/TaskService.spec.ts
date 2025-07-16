@@ -20,13 +20,15 @@ import {
   TaskPosition,
   TaskStatus,
 } from '../model';
-import { MoveTaskDto, RelativeMoveTaskDto } from '../dto/MoveTaskDto';
+import { MoveTaskDto } from '../dto/MoveTaskDto';
 import { QueryTaskDto } from '../dto/QueryTaskDto';
+import { UserService } from '@/user/service/UserService';
 
 const getEntityId = (entity: { id: number }) => entity.id;
 
 describe('TaskService', () => {
   let service: TaskService;
+  const userService = { isAdmin: () => false } as unknown as UserService;
   let taskListRepo: Repository<TaskList>;
   let taskRepo: Repository<Task>;
   let userRepo: Repository<User>;
@@ -149,11 +151,7 @@ describe('TaskService', () => {
         TypeOrmModule.forRoot({
           type: 'better-sqlite3',
           database: ':memory:',
-          entities: [
-            'src/todo/entity/*.ts',
-            'src/core/entity/*.ts',
-            'src/user/entity/*.ts',
-          ],
+          entities: ['src/todo/entity/*.ts', 'src/user/entity/*.ts'],
           synchronize: true,
           dropSchema: true,
         }),
@@ -164,6 +162,10 @@ describe('TaskService', () => {
         {
           provide: CURRENT_USER,
           useValue: mockCurrentUser,
+        },
+        {
+          provide: UserService,
+          useValue: userService,
         },
       ],
     }).compile();
@@ -444,12 +446,43 @@ describe('TaskService', () => {
         );
       });
 
-      it('should throw error for a given task list not owned by current user', async () => {
+      it('should return empty array for a given task list not owned by current user', async () => {
         const dto = { taskListId: db.firstUnownedTaskList.id } as QueryTaskDto;
 
-        await expect(service.getTasks(dto)).rejects.toThrow(
-          `Task list with ID ${dto.taskListId} not owned by user ${mockCurrentUser.id}`,
+        const result = await service.getTasks(dto);
+        expect(result).toEqual([]);
+      });
+
+      it("should return other user's tasks when current user is admin", async () => {
+        const taskListId = db.firstUnownedTaskList.id;
+        const tasksInList = db.tasks.filter(
+          (task) => task.taskListId === taskListId,
         );
+        const dto = {
+          users: [db.firstUnownedTaskList.creatorId],
+          taskListId,
+        } as QueryTaskDto;
+
+        jest.spyOn(userService, 'isAdmin').mockResolvedValue(true);
+        const tasks = await service.getTasks(dto);
+
+        expect(tasks).toBeSorted({ key: 'order' });
+
+        expect(tasks.length).toEqual(tasksInList.length);
+        expect(tasks.map(getEntityId)).toEqual(tasksInList.map(getEntityId));
+      });
+
+      it("should return empty querying other user's tasks when current user is not admin", async () => {
+        const taskListId = db.firstUnownedTaskList.id;
+        const dto = {
+          users: [db.firstUnownedTaskList.creatorId],
+          taskListId,
+        } as QueryTaskDto;
+
+        jest.spyOn(userService, 'isAdmin').mockResolvedValue(false);
+        const tasks = await service.getTasks(dto);
+
+        expect(tasks).toEqual([]);
       });
     });
 

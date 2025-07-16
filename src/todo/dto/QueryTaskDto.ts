@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsOptional } from 'class-validator';
+import { IsArray, IsEnum, IsInt, IsNumber, IsOptional } from 'class-validator';
 import { TaskOrder } from '../model';
 
 export class QueryTaskDto {
@@ -11,6 +11,11 @@ export class QueryTaskDto {
     message: `Task order must be one of: ${Object.values(TaskOrder).join(', ')}`,
   })
   order = DEFAULT_TASK_ORDER;
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  users?: number[];
 }
 
 export const DEFAULT_TASK_ORDER = TaskOrder.ASC;
