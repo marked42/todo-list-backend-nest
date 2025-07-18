@@ -5,9 +5,8 @@
       "type": "node",
       "request": "launch",
       "name": "Debug NestJS",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start:debug"],
-      "port": 3000,
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "backend", "run", "start:debug"],
       "skipFiles": ["<node_internals>/**"],
       "console": "integratedTerminal"
     },

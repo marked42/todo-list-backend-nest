@@ -12,7 +12,7 @@ export class Task extends TraceableEntity {
   content: string;
 
   @Column({
-    type: 'varchar',
+    type: process.env.DATABASE_TYPE === 'mysql' ? 'enum' : 'varchar',
     enum: TaskStatus,
     default: TaskStatus.Todo,
   })

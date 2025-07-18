@@ -12,7 +12,7 @@ export class TaskList extends TraceableEntity {
   tasks: Task[];
 
   @Column({
-    type: 'varchar',
+    type: process.env.DATABASE_TYPE === 'mysql' ? 'enum' : 'varchar',
     enum: TaskListStatus,
     default: TaskListStatus.Active,
   })
