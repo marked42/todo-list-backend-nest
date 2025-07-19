@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from '@/app/AppModule';
 
@@ -14,6 +14,12 @@ async function bootstrap() {
       disableErrorMessages: false, // Set to false to enable detailed error messages
     }),
   );
+
+  app.setGlobalPrefix('/api');
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
 
   const config = new DocumentBuilder()
     .setTitle('todolist example')
