@@ -20,9 +20,9 @@ export default defineConfig({
       '/foo': 'http://localhost:4567',
       // with options
       '/api': {
-        target: 'http://jsonplaceholder.typicode.com',
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        // rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

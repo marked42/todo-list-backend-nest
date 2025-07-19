@@ -19,14 +19,14 @@ export class UserService {
   }
 
   async create(dto: CreateUserDto) {
-    const existed = await this.findByUserName(dto.username);
+    const existed = await this.findByUserName(dto.name);
 
     if (existed) {
       throw new HttpException('用户名已被占用', 400);
     }
 
     const user = new User();
-    user.name = dto.username;
+    user.name = dto.name;
 
     const salt = await bcrypt.genSalt(10);
     user.encryptedPassword = await bcrypt.hash(dto.password, salt);

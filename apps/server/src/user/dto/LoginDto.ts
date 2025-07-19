@@ -1,6 +1,6 @@
 import { IsNotEmpty, MinLength } from 'class-validator';
 
-export class CreateUserDto {
+export class LoginDto {
   @IsNotEmpty({ message: '用户名不能为空' })
   name: string;
 

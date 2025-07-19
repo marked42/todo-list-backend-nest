@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, MinLength } from 'class-validator';
 
-export class CreateTokenDto {
+export class RegisterDto {
   @IsNotEmpty({
     message: '用户名不能为空',
   })
