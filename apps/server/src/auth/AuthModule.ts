@@ -4,8 +4,10 @@ import { REQUEST } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { UserModule } from '@/user/UserModule';
 import { CURRENT_USER, jwtConstants } from './model';
-import { TokenController } from './controller/TokenController';
+import { AuthController } from './controller/AuthController';
 import { AuthService } from './service/AuthService';
+import { LocalStrategy } from './strategies/local.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Global()
 @Module({
@@ -17,7 +19,7 @@ import { AuthService } from './service/AuthService';
       signOptions: { expiresIn: '3000000000' },
     }),
   ],
-  controllers: [TokenController],
+  controllers: [AuthController],
   providers: [
     AuthService,
     {
@@ -26,8 +28,9 @@ import { AuthService } from './service/AuthService';
       inject: [REQUEST],
       scope: Scope.REQUEST,
     },
+    LocalStrategy,
+    JwtStrategy,
   ],
-  // TODO: no need ?
   exports: [CURRENT_USER],
 })
 export class AuthModule {}
