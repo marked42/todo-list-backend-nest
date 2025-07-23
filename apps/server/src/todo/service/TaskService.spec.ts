@@ -2,7 +2,7 @@ import { DataSource, Repository } from 'typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { User } from '@/user/entity/User';
+import { User } from '@/user/entity/user.entity';
 import { CURRENT_USER } from '@/auth/model';
 import { TaskService } from './TaskService';
 import { TaskList } from '../entity/TaskList';
@@ -22,7 +22,7 @@ import {
 } from '../model';
 import { MoveTaskDto } from '../dto/MoveTaskDto';
 import { QueryTaskDto } from '../dto/QueryTaskDto';
-import { UserService } from '@/user/service/UserService';
+import { UserService } from '@/user/user.service';
 
 const getEntityId = (entity: { id: number }) => entity.id;
 

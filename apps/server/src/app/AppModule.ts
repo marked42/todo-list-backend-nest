@@ -6,7 +6,7 @@ import { AppConfigModule } from '@/config/AppConfigModule';
 import { DatabaseModule } from '@/database/DatabaseModule';
 import { HealthController } from './controller/HealthController';
 import { AuthModule } from '@/auth/AuthModule';
-import { UserModule } from '@/user/UserModule';
+import { UserModule } from '@/user/user.module';
 
 @Module({
   imports: [

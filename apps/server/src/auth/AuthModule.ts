@@ -2,7 +2,7 @@ import { Request } from 'express';
 import { Global, Module, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
-import { UserModule } from '@/user/UserModule';
+import { UserModule } from '@/user/user.module';
 import { CURRENT_USER, jwtConstants } from './model';
 import { AuthController } from './controller/AuthController';
 import { AuthService } from './service/AuthService';
