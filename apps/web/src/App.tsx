@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { Toaster } from "@/components/ui/sonner"
 import HomePage from '@/pages/home'
-import LoginPage from '@/pages/login';
-import RegisterPage from '@/pages/register'
+import SignInPage from '@/pages/sign-in';
+import SignUpPage from '@/pages/sign-up'
 
 function Loading() {
   return <div>loading...</div>
@@ -18,15 +18,15 @@ function AuthRoute() {
   const { isUserLoggedIn } = useCurrentUser();
   const location = useLocation();
 
-  return isUserLoggedIn ? <Outlet /> : <Navigate to="/login" state={{ from: location }} replace />
+  return isUserLoggedIn ? <Outlet /> : <Navigate to="/sign-in" state={{ from: location }} replace />
 }
 
 function App() {
   return (
     <Suspense fallback={<Loading />}>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/sign-in" element={<SignInPage />} />
+        <Route path="/sign-up" element={<SignUpPage />} />
 
         <Route element={<AuthRoute />}>
           <Route path="/" element={<HomePage />} />

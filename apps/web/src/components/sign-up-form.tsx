@@ -15,14 +15,14 @@ import { useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import * as api from '@/api'
 
-export function RegisterForm({
+export function SignUpForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
 
-  const { login } = useCurrentUser();
+  const { signIn } = useCurrentUser();
 
   const navigate = useNavigate();
   const location = useLocation()
@@ -33,8 +33,8 @@ export function RegisterForm({
     e.preventDefault();
 
     try {
-      await api.user.register({ name, password })
-      login({ name, password })
+      await api.user.signUp({ name, password })
+      signIn({ name, password })
       toast("login successfully")
 
       navigate(from, { replace: true })

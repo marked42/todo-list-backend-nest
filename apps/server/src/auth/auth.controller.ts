@@ -2,8 +2,8 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from './decorator/public.decorator';
 import { Request } from 'express';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import { SignUpDto } from './dto/sign-up.dto';
+import { SignInDto } from './dto/sign-in.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @Public()
@@ -11,18 +11,18 @@ import { AuthGuard } from '@nestjs/passport';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Post('/register')
-  register(@Body() dto: RegisterDto) {
+  @Post('/sign-up')
+  register(@Body() dto: SignUpDto) {
     return this.authService.register(dto);
   }
 
-  @Post('/login')
+  @Post('/sign-in')
   @UseGuards(AuthGuard('local'))
-  login(@Body() dto: LoginDto) {
+  login(@Body() dto: SignInDto) {
     return this.authService.login(dto);
   }
 
-  @Post('/logout')
+  @Post('/sign-out')
   @UseGuards(AuthGuard('jwt'))
   logout(@Req() req: Request) {
     const token = req.headers.authorization?.split(' ')[1];
