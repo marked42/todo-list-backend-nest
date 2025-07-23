@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { CallHandler, ExecutionContext } from '@nestjs/common';
 import { lastValueFrom, of } from 'rxjs';
-import { ResponseInterceptor } from './ResponseInterceptor';
+import { ResponseInterceptor } from './response.interceptor';
 import { ResponseCode, resp } from '../model';
 
 describe('ResponseInterceptor', () => {

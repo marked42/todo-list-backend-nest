@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import * as validators from 'class-validator';
-import { UnionTypeValidationPipe } from './UnionTypeValidationPipe';
+import { UnionTypeValidationPipe } from './union-type-validation-pipe.decorator';
 
 describe('UnionTypeValidationPipe', () => {
   let pipe: UnionTypeValidationPipe;

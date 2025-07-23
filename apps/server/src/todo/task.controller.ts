@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { UnionTypeValidationPipe } from '@/common/decorator/UnionTypeValidationPipe';
+import { UnionTypeValidationPipe } from '@/common/decorator/union-type-validation-pipe.decorator';
 import { TaskMoveResult } from './model';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';

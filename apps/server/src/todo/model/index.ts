@@ -1,4 +1,4 @@
-export * from './TaskPosition';
+export * from './task-position';
 
 export enum TaskListStatus {
   Close = 'closed',
