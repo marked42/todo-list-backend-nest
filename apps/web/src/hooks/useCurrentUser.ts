@@ -22,10 +22,10 @@ export function useCurrentUser() {
 
   const [loading, setLoading] = useState(false)
 
-  const login = async (payload: { name: string; password: string }) => {
+  const signIn = async (payload: { name: string; password: string }) => {
     setLoading(true)
     try {
-      const user = await api.user.login(payload)
+      const user = await api.user.signIn(payload)
 
       setUser({
         // TODO:
@@ -38,7 +38,7 @@ export function useCurrentUser() {
     }
   }
 
-  const logout = () => {
+  const signOut = () => {
     setUser(null)
   }
 
@@ -47,8 +47,8 @@ export function useCurrentUser() {
     get isUserLoggedIn() {
       return !!user
     },
-    login,
+    signIn,
     loading,
-    logout,
+    signOut,
   }
 }

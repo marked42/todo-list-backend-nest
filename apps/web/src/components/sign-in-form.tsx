@@ -14,14 +14,14 @@ import { useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
-export function LoginForm({
+export function SignInForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const { login, loading } = useCurrentUser();
+  const { signIn, loading } = useCurrentUser();
 
   const navigate = useNavigate();
   const location = useLocation()
@@ -33,7 +33,7 @@ export function LoginForm({
 
     // TODO: email -> name
     try {
-      await login({ name: email, password })
+      await signIn({ name: email, password })
       navigate(from, { replace: true })
     } catch (error: any) {
       toast.error(error.response.data.message)
