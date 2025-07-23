@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { HttpExceptionFilter } from '@/common/filter/HttpExceptionFilter';
-import { TodoModule } from '@/todo/TodoModule';
+import { TodoModule } from '@/todo/todo.module';
 import { AppConfigModule } from '@/config/AppConfigModule';
 import { DatabaseModule } from '@/database/DatabaseModule';
 import { HealthController } from './controller/HealthController';

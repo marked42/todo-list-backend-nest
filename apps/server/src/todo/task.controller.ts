@@ -10,13 +10,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { UnionTypeValidationPipe } from '@/common/decorator/UnionTypeValidationPipe';
-import { TaskMoveResult } from '../model';
-import { CreateTaskDto } from '../dto/CreateTaskDto';
-import { UpdateTaskDto } from '../dto/UpdateTaskDto';
-import { ReorderTaskDto, ReorderTaskDtoClasses } from '../dto/ReorderTaskDto';
-import { MoveTaskDto, MoveTaskDtoClasses } from '../dto/MoveTaskDto';
-import { TaskService } from '../service/TaskService';
-import { QueryTaskDto } from '../dto/QueryTaskDto';
+import { TaskMoveResult } from './model';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
+import { ReorderTaskDto, ReorderTaskDtoClasses } from './dto/reorder-task.dto';
+import { MoveTaskDto, MoveTaskDtoClasses } from './dto/move-task.dto';
+import { TaskService } from './task.service';
+import { QueryTaskDto } from './dto/query-task.dto';
 
 @Controller('tasks')
 export class TaskController {

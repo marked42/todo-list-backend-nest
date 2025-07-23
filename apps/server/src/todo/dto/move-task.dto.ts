@@ -2,7 +2,7 @@ import { IsNotEmpty, IsNumber } from 'class-validator';
 import {
   AbsoluteReorderTaskDto,
   RelativeReorderTaskDto,
-} from './ReorderTaskDto';
+} from './reorder-task.dto';
 
 export class RelativeMoveTaskDto extends RelativeReorderTaskDto {
   @IsNotEmpty()

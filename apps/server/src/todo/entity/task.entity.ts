@@ -1,7 +1,7 @@
 import { Column, Entity, ManyToOne, RelationId } from 'typeorm';
 import { TraceableEntity } from '@/common/entity/TraceableEntity';
 import { TaskStatus } from '../model';
-import { TaskList } from './TaskList';
+import { TaskList } from './task-list.entity';
 
 @Entity()
 export class Task extends TraceableEntity {

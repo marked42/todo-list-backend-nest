@@ -1,10 +1,10 @@
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { User } from '@/user/entity/user.entity';
-import { TaskService } from '../service/TaskService';
-import { TaskListController } from './TaskListController';
-import { TaskList } from '../entity/TaskList';
-import { CreateTaskListDto } from '../dto/CreateTaskListDto';
+import { TaskService } from './task.service';
+import { TaskListController } from './task-list.controller';
+import { TaskList } from './entity/task-list.entity';
+import { CreateTaskListDto } from './dto/create-task-list.dto';
 
 describe('TaskListController', () => {
   let controller: TaskListController;
