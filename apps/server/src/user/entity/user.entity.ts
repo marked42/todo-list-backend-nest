@@ -1,5 +1,5 @@
 import { Column, Entity, JoinTable, OneToMany } from 'typeorm';
-import { BaseEntity } from '@/common/entity/BaseEntity';
+import { BaseEntity } from '@/common/entity/base.entity';
 import { Role } from '@/user/entity/role.entity';
 
 @Entity()

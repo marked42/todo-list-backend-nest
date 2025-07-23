@@ -1,9 +1,9 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
-import { AuthService } from '../service/AuthService';
-import { Public } from '../decorator/Public';
+import { AuthService } from './auth.service';
+import { Public } from './decorator/public.decorator';
 import { Request } from 'express';
-import { RegisterDto } from '../dto/RegisterDto';
-import { LoginDto } from '../dto/LoginDto';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @Public()

@@ -1,6 +1,6 @@
 import { Entity, ManyToOne, ManyToMany, RelationId } from 'typeorm';
 import { User } from '@/user/entity/user.entity';
-import { BaseEntity } from './BaseEntity';
+import { BaseEntity } from './base.entity';
 
 @Entity()
 export class TraceableEntity extends BaseEntity {
