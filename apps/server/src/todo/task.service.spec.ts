@@ -4,9 +4,9 @@ import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { User } from '@/user/entity/user.entity';
 import { CURRENT_USER } from '@/auth/model';
-import { TaskService } from './TaskService';
-import { TaskList } from '../entity/TaskList';
-import { Task } from '../entity/Task';
+import { TaskService } from './task.service';
+import { TaskList } from '../entity/task-list.entity';
+import { Task } from '../entity/task.entity';
 import { CreateTaskDto } from '../dto/CreateTaskDto';
 import { UpdateTaskDto } from '../dto/UpdateTaskDto';
 import {
