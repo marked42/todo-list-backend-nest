@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { User } from '@/user/entity/User';
+import { User } from '@/user/entity/user.entity';
 import { TaskService } from '../service/TaskService';
 import { TaskListController } from './TaskListController';
 import { TaskList } from '../entity/TaskList';

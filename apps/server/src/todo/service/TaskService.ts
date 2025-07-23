@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { User } from '@/user/entity/User';
+import { User } from '@/user/entity/user.entity';
 import { CURRENT_USER } from '@/auth/model';
 import { TaskList } from '../entity/TaskList';
 import { Task } from '../entity/Task';
@@ -19,7 +19,7 @@ import { TaskMoveResult, TaskPosition } from '../model';
 import { RelativeReorderTaskDto, ReorderTaskDto } from '../dto/ReorderTaskDto';
 import { MoveTaskDto, RelativeMoveTaskDto } from '../dto/MoveTaskDto';
 import { DEFAULT_TASK_ORDER, QueryTaskDto } from '../dto/QueryTaskDto';
-import { UserService } from '@/user/service/UserService';
+import { UserService } from '@/user/user.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TaskService {
