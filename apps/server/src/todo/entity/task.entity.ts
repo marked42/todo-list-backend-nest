@@ -3,7 +3,14 @@ import { TraceableEntity } from '@/common/entity/traceable.entity';
 import { TaskStatus } from '../model';
 import { TaskList } from './task-list.entity';
 
-console.log('DATABASE_TYPE: ', process.env.DATABASE_TYPE);
+// task.entity.ts
+import { ConfigService } from '@nestjs/config';
+
+// 在实体类定义前获取配置
+const configService = new ConfigService();
+const databaseType = configService.get<string>('DATABASE_TYPE');
+
+console.log('DATABASE_TYPE: ', databaseType);
 @Entity()
 export class Task extends TraceableEntity {
   @Column()

@@ -5,23 +5,23 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { User } from '@/user/entity/user.entity';
 import { CURRENT_USER } from '@/auth/model';
 import { TaskService } from './task.service';
-import { TaskList } from '../entity/task-list.entity';
-import { Task } from '../entity/task.entity';
-import { CreateTaskDto } from '../dto/CreateTaskDto';
-import { UpdateTaskDto } from '../dto/UpdateTaskDto';
+import { TaskList } from './entity/task-list.entity';
+import { Task } from './entity/task.entity';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 import {
   AbsoluteReorderTaskDto,
   RelativeReorderTaskDto,
-} from '../dto/ReorderTaskDto';
+} from './dto/reorder-task.dto';
 import {
   TaskListStatus,
   TaskMoveResult,
   TaskOrder,
   TaskPosition,
   TaskStatus,
-} from '../model';
-import { MoveTaskDto } from '../dto/MoveTaskDto';
-import { QueryTaskDto } from '../dto/QueryTaskDto';
+} from './model';
+import { MoveTaskDto } from './dto/move-task.dto';
+import { QueryTaskDto } from './dto/query-task.dto';
 import { UserService } from '@/user/user.service';
 
 const getEntityId = (entity: { id: number }) => entity.id;
