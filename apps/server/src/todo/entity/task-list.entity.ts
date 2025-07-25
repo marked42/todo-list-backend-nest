@@ -12,8 +12,8 @@ export class TaskList extends TraceableEntity {
   tasks: Task[];
 
   @Column({
-    type: process.env.DATABASE_TYPE === 'mysql' ? 'enum' : 'varchar',
-    enum: TaskListStatus,
+    type: process.env.NODE_ENV === 'test' ? 'varchar' : 'enum', // 动态切换类型
+    enum: process.env.NODE_ENV === 'test' ? undefined : TaskListStatus, // 测试环境不传 enum
     default: TaskListStatus.Active,
   })
   status: TaskListStatus;
