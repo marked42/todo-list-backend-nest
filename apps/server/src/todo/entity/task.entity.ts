@@ -3,7 +3,6 @@ import { TraceableEntity } from '@/common/entity/traceable.entity';
 import { TaskStatus } from '../model';
 import { TaskList } from './task-list.entity';
 
-console.log('DATABASE_TYPE: ', process.env.DATABASE_TYPE);
 @Entity()
 export class Task extends TraceableEntity {
   @Column()
@@ -13,10 +12,8 @@ export class Task extends TraceableEntity {
   content: string;
 
   @Column({
-    // TODO:
-    // type: process.env.DATABASE_TYPE === 'mysql' ? 'enum' : 'varchar',
-    type: 'enum',
-    enum: TaskStatus,
+    type: process.env.NODE_ENV === 'test' ? 'varchar' : 'enum', // 动态切换类型
+    enum: process.env.NODE_ENV === 'test' ? undefined : TaskStatus, // 测试环境不传 enum
     default: TaskStatus.Todo,
   })
   status: TaskStatus;
