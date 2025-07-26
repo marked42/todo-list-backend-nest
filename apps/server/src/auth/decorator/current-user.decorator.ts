@@ -9,7 +9,7 @@ import { RequestUser } from '../model';
 export type UserPayload = RequestUser;
 
 export const CurrentUser = createParamDecorator(
-  (data: keyof UserPayload, ctx: ExecutionContext) => {
+  (key: keyof UserPayload, ctx: ExecutionContext) => {
     // Assuming the user is stored in the request object
     const request = ctx.switchToHttp().getRequest<Request>();
     if (!request.user) {
@@ -17,6 +17,6 @@ export const CurrentUser = createParamDecorator(
     }
     const user = request.user as UserPayload;
 
-    return data ? user?.[data] : user;
+    return key ? user?.[key] : user;
   },
 );
