@@ -31,9 +31,8 @@ export function SignInForm({
   const handleLogin = async (e: React.MouseEvent) => {
     e.preventDefault();
 
-    // TODO: email -> name
     try {
-      await signIn({ name: email, password })
+      await signIn({ email: email, password })
       navigate(from, { replace: true })
     } catch (error: any) {
       toast.error(error.response.data.message)
@@ -88,7 +87,7 @@ export function SignInForm({
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
-              <a href="#" className="underline underline-offset-4">
+              <a href="/sign-up" className="underline underline-offset-4">
                 Sign up
               </a>
             </div>

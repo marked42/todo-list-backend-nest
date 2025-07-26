@@ -10,6 +10,7 @@ import { TOKEN_PREFIX, RequestUser } from '../model';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorator/public.decorator';
 
+// TODO: delete
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(

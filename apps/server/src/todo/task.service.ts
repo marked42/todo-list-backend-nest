@@ -26,12 +26,12 @@ export class TaskService {
   constructor(
     @InjectRepository(TaskList) private taskListRepo: Repository<TaskList>,
     @InjectRepository(Task) private taskRepo: Repository<Task>,
-    @Inject(CURRENT_USER) private user: User,
+    @Inject(CURRENT_USER) private user: () => User,
     private userService: UserService,
   ) {}
 
   private get userId() {
-    return this.user.id;
+    return this.user().id;
   }
 
   async getTaskLists() {

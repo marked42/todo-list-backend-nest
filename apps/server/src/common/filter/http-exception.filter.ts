@@ -13,7 +13,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = context.getResponse<Response>();
 
     const code = exception.getStatus();
-    const message = exception.message;
+    const exceptionResponse = exception.getResponse();
+    const message = extractExceptionMessage(exceptionResponse); //exceptionResponse
 
     response.status(code).json({
       code,
@@ -21,4 +22,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message,
     });
   }
+}
+
+function extractExceptionMessage(response: string | object) {
+  if (typeof response === 'string') {
+    return response;
+  }
+  // @ts-expect-error message
+  return String(response?.message || '');
 }

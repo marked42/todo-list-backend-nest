@@ -16,34 +16,32 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(dto: SignUpDto) {
-    return this.userService.create(dto);
+  async signUp(dto: SignUpDto) {
+    const user = await this.userService.create(dto);
+    return user.id;
   }
 
-  async login(dto: SignInDto) {
-    const user = await this.validateUser(dto.name, dto.password);
+  async signIn(dto: SignInDto) {
+    const user = await this.validateUserEmail(dto.email, dto.password);
 
-    // 3. 生成并返回token
     const payload = {
       sub: user.id,
-      username: user.name,
+      email: user.email,
     };
 
     const token = await this.jwtService.signAsync(payload);
 
     return {
-      id: user.id,
-      name: user.name,
-      access_token: token,
+      accessToken: token,
     };
   }
 
-  async validateUser(name: string, password: string) {
+  async validateUserEmail(email: string, password: string) {
     // 1. 查看用户是否存在
-    const user = await this.userService.findByUserName(name);
+    const user = await this.userService.findByUserEmail(email);
 
     if (!user) {
-      throw new NotFoundException(`用户${name}不存在`);
+      throw new NotFoundException(`用户${email}不存在`);
     }
 
     // 2. 用户密码是否有效
@@ -57,7 +55,7 @@ export class AuthService {
   }
 
   // TODO: TOKENS black list, revoke this token
-  logout(token: string) {
+  signOut(token: string) {
     return 'Logged out successfully ' + token;
   }
 }

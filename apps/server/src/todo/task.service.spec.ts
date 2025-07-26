@@ -161,7 +161,7 @@ describe('TaskService', () => {
         TaskService,
         {
           provide: CURRENT_USER,
-          useValue: mockCurrentUser,
+          useValue: () => mockCurrentUser,
         },
         {
           provide: UserService,
@@ -188,7 +188,7 @@ describe('TaskService', () => {
     db.users = userRepo.create([
       mockCurrentUser,
       {
-        name: 'User 2',
+        email: 'User 2',
         encryptedPassword: 'pass2',
       },
     ]);
