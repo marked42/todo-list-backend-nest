@@ -19,7 +19,7 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
   const { signIn } = useCurrentUser();
@@ -29,17 +29,17 @@ export function SignUpForm({
 
   const from = location.state?.from?.pathname || '/';
 
-  const handleRegister = async (e: React.MouseEvent) => {
+  const handleUserSignUp = async (e: React.MouseEvent) => {
     e.preventDefault();
 
     try {
-      await api.user.signUp({ name, password })
-      signIn({ name, password })
+      await api.user.signUp({ email, password })
+      signIn({ email, password })
       toast("login successfully")
 
       navigate(from, { replace: true })
-    } catch (e: any) {
-      toast.error(e.message)
+    } catch (error: any) {
+      toast.error(error.response.data.message)
     }
   }
 
@@ -56,12 +56,13 @@ export function SignUpForm({
           <form>
             <div className="flex flex-col gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="name"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="input name"
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="m@example.com"
                   required
                 />
               </div>
@@ -74,7 +75,7 @@ export function SignUpForm({
                 />
               </div>
               <div className="flex flex-col gap-3">
-                <Button type="submit" className="w-full" onClick={handleRegister} >
+                <Button type="submit" className="w-full" onClick={handleUserSignUp} >
                   Create Account and login
                 </Button>
               </div>

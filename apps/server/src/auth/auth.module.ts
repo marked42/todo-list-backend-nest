@@ -24,7 +24,13 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     AuthService,
     {
       provide: CURRENT_USER,
-      useFactory: (request: Request) => request.user,
+      /**
+       * use a factory to ensure it is set per request,
+       * injections happens on startup when request.user is undefined,
+       * request.user is set by passport after authentication for each request,
+       * so returns a function delaying the access to request.user
+       */
+      useFactory: (request: Request) => () => request.user,
       inject: [REQUEST],
       scope: Scope.REQUEST,
     },

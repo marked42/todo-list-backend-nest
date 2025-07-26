@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UnionTypeValidationPipe } from '@/common/decorator/union-type-validation-pipe.decorator';
 import { TaskMoveResult } from './model';
@@ -17,8 +18,10 @@ import { ReorderTaskDto, ReorderTaskDtoClasses } from './dto/reorder-task.dto';
 import { MoveTaskDto, MoveTaskDtoClasses } from './dto/move-task.dto';
 import { TaskService } from './task.service';
 import { QueryTaskDto } from './dto/query-task.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('tasks')
+@UseGuards(AuthGuard('jwt'))
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 

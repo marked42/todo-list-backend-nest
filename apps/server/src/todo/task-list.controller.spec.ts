@@ -10,7 +10,7 @@ describe('TaskListController', () => {
   let controller: TaskListController;
   let taskService: TaskService;
 
-  const mockUser = { id: 1, name: 'Test' } as User;
+  const mockUser = { id: 1, email: 'Test' } as User;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({

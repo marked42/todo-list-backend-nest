@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entity/user.entity';
-import { CreateUserDto } from './dto/create-user-dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { RoleCode } from './entity/role.entity';
 
 @Injectable()
@@ -12,27 +12,25 @@ export class UserService {
     @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
-  async findByUserName(username: string) {
+  async findByUserEmail(email: string) {
     return this.userRepository.findOneBy({
-      name: username,
+      email,
     });
   }
 
   async create(dto: CreateUserDto) {
-    const existed = await this.findByUserName(dto.name);
+    const existed = await this.findByUserEmail(dto.email);
 
     if (existed) {
       throw new HttpException('用户名已被占用', 400);
     }
 
-    const user = new User();
-    user.name = dto.name;
+    const user = this.userRepository.create({
+      email: dto.email,
+      encryptedPassword: await bcrypt.hash(dto.password, 10),
+    });
 
-    const salt = await bcrypt.genSalt(10);
-    user.encryptedPassword = await bcrypt.hash(dto.password, salt);
-
-    const saved = await this.userRepository.save(user);
-    return saved;
+    return this.userRepository.save(user);
   }
 
   async isAdmin(id: number) {
