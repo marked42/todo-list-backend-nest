@@ -8,8 +8,8 @@ export default function HomePage() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const handleSignOut = () => {
-        signOut();
+    const handleSignOut = async () => {
+        await signOut();
         navigate('/sign-in', { replace: true, state: { from: location } })
     }
 

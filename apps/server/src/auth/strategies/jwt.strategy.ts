@@ -1,36 +1,33 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigType } from '@nestjs/config';
 import { JwtConfig } from '../jwt.config';
-
-export interface JwtPayload {
-  sub: number;
-  email: string;
-  aud: string;
-  iss: string;
-  exp: number;
-  iat: number;
-}
-
-export interface JwtUser {
-  id: number;
-  email: string;
-}
+import { JwtUserPayload, toJwtRequestUser } from '../model';
+import { TokenBlacklistService } from '../token-blacklist.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     @Inject(JwtConfig.KEY) private jwtConfig: ConfigType<typeof JwtConfig>,
+    private tokenBlacklistService: TokenBlacklistService, // Assuming you have a service to handle token blacklisting
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: jwtConfig.accessTokenSecret,
+      passReqToCallback: true,
     });
   }
 
-  validate(payload: JwtPayload): JwtUser {
-    return { id: payload.sub, email: payload.email };
+  async validate(request: Request, payload: JwtUserPayload) {
+    const token = ExtractJwt.fromAuthHeaderAsBearerToken()(request)!;
+    const isBlacklisted =
+      await this.tokenBlacklistService.isTokenBlacklisted(token);
+    if (isBlacklisted) {
+      throw new UnauthorizedException('Token is blacklisted');
+    }
+
+    return toJwtRequestUser(payload);
   }
 }

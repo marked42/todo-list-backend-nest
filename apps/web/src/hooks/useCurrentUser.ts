@@ -5,6 +5,7 @@ import { CURRENT_USER_KEY, type NullableUserContext } from '@/utils/user'
 import { axiosInstance } from '@/api/instance'
 
 export function useCurrentUser() {
+  // TODO: should use session storage or cookie
   const [user, setUser] = useLocalStorage(
     CURRENT_USER_KEY,
     null as NullableUserContext
@@ -32,8 +33,10 @@ export function useCurrentUser() {
     }
   }
 
-  const signOut = () => {
-    setUser(null)
+  const signOut = async () => {
+    // setUser(null)
+    // revoke user access token in server
+    return await api.user.signOut()
   }
 
   return {

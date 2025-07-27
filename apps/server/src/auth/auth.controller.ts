@@ -33,10 +33,11 @@ export class AuthController {
     return this.authService.refreshToken(token);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('/sign-out')
   @UseGuards(AuthGuard('jwt'))
   signOut(@Req() req: Request) {
-    // TODO:
+    // TODO: access token decorator
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
       throw new Error('no token');

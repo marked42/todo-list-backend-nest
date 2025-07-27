@@ -11,3 +11,7 @@ export function signIn(payload: { email: string; password: string }) {
 export function signUp(payload: { email: string; password: string }) {
   return axiosInstance.post<IUserContext>('/api/v1/auth/sign-up', payload)
 }
+
+export function signOut() {
+  return axiosInstance.post<IUserContext>('/api/v1/auth/sign-out')
+}

@@ -9,6 +9,7 @@ import { AuthService } from './auth.service';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtConfigService } from './jwt.config';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 @Global()
 @Module({
@@ -35,6 +36,7 @@ import { JwtConfigService } from './jwt.config';
     },
     LocalStrategy,
     JwtStrategy,
+    TokenBlacklistService,
   ],
   exports: [CURRENT_USER],
 })
