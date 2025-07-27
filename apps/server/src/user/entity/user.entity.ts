@@ -6,9 +6,8 @@ import { Role } from '@/user/entity/role.entity';
 export class User extends BaseEntity {
   @Column({
     unique: true,
-    nullable: true,
   })
-  email?: string;
+  email: string;
 
   @Column({
     default: '',

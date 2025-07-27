@@ -4,6 +4,20 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigType } from '@nestjs/config';
 import { JwtConfig } from '../jwt.config';
 
+export interface JwtPayload {
+  sub: number;
+  email: string;
+  aud: string;
+  iss: string;
+  exp: number;
+  iat: number;
+}
+
+export interface JwtUser {
+  id: number;
+  email: string;
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
@@ -12,14 +26,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: jwtConfig.secret,
+      secretOrKey: jwtConfig.accessTokenSecret,
     });
   }
 
-  validate(payload: any) {
+  validate(payload: JwtPayload): JwtUser {
     return { id: payload.sub, email: payload.email };
-    // const user = this.userService.findByUserEmail(payload.email);
-    // console.log('user', user);
-    // return user;
   }
 }

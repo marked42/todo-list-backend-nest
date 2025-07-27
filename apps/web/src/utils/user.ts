@@ -3,6 +3,7 @@ export const CURRENT_USER_KEY = 'todo_current_user'
 export interface IUserContext {
   email: string
   accessToken: string
+  refreshToken: string
 }
 
 export type Nullable<T> = T | null | undefined
@@ -19,6 +20,10 @@ export function getUserFromLocalStorage() {
   } catch (e) {
     return null
   }
+}
+
+export function setUserToLocalStorage(user: IUserContext) {
+  window.localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user))
 }
 
 export function getUserTokenFromLocalStorage() {

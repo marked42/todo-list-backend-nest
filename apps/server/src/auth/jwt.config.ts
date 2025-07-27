@@ -4,7 +4,9 @@ import { JwtModuleOptions, JwtOptionsFactory } from '@nestjs/jwt';
 
 export const JwtConfig = registerAs('jwt', () => {
   return {
-    secret: process.env.JWT_SECRET! || 'default_secret',
+    accessTokenSecret: process.env.JWT_ACCESS_TOKEN_SECRET || 'default_secret',
+    refreshTokenSecret:
+      process.env.JWT_REFRESH_TOKEN_SECRET || 'default_refresh_secret',
     audience: process.env.JWT_TOKEN_AUDIENCE,
     issuer: process.env.JWT_TOKEN_ISSUER,
     accessTokenTtl: process.env.JWT_ACCESS_TOKEN_TTL || '1h',
@@ -27,7 +29,7 @@ export class JwtConfigService implements JwtOptionsFactory {
         issuer: this.jwtConfig.issuer,
         expiresIn: this.jwtConfig.accessTokenTtl,
       },
-      secret: this.jwtConfig.secret,
+      secret: this.jwtConfig.accessTokenSecret,
     };
   }
 }

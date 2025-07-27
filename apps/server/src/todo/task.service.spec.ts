@@ -137,6 +137,7 @@ describe('TaskService', () => {
   /**  user first db user as current user */
   const mockCurrentUser = {
     id: 1,
+    email: 'test@example.com',
     name: 'User 1',
     encryptedPassword: 'pass1',
   };
