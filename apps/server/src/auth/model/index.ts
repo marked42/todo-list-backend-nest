@@ -1,8 +1,24 @@
 export const CURRENT_USER = Symbol('CURRENT_USER');
 
-export const TOKEN_PREFIX = 'Bearer';
+export interface JwtUserPayload {
+  sub: number;
+  email: string;
+  aud: string;
+  iss: string;
+  exp: number;
+  iat: number;
+}
 
-export class RequestUser {
+export interface JwtRequestUser {
   id: number;
-  name: string;
+  email: string;
+}
+
+export function toJwtRequestUser(payload: JwtUserPayload): JwtRequestUser {
+  const { sub, ...rest } = payload;
+
+  return {
+    id: sub,
+    ...rest,
+  };
 }

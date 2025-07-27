@@ -11,8 +11,9 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { JwtConfig } from './jwt.config';
 import { ConfigType } from '@nestjs/config';
-import { JwtUser } from './strategies/jwt.strategy';
 import { User } from '@/user/entity/user.entity';
+import { JwtUserPayload } from './model';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +22,7 @@ export class AuthService {
     private jwtService: JwtService,
     @Inject(JwtConfig.KEY)
     private jwtConfig: ConfigType<typeof JwtConfig>,
+    private tokenBlacklistService: TokenBlacklistService, // Assuming you have a service to handle token blacklisting
   ) {}
 
   async signUp(dto: SignUpDto) {
@@ -79,11 +81,11 @@ export class AuthService {
   async refreshToken(token: string) {
     try {
       // TODO: distinguish access token / refresh token jwt service
-      const payload = await this.jwtService.verifyAsync<JwtUser>(token, {
+      const payload = await this.jwtService.verifyAsync<JwtUserPayload>(token, {
         secret: this.jwtConfig.refreshTokenSecret,
       });
 
-      const user = await this.userService.findByUserEmail(payload.email);
+      const user = await this.userService.findUserById(payload.sub);
       if (!user) {
         throw new NotFoundException('User not found');
       }
@@ -96,7 +98,7 @@ export class AuthService {
 
   async validateUserEmail(email: string, password: string) {
     // 1. 查看用户是否存在
-    const user = await this.userService.findByUserEmail(email);
+    const user = await this.userService.findUserByEmail(email);
 
     if (!user) {
       throw new NotFoundException(`用户${email}不存在`);
@@ -113,7 +115,20 @@ export class AuthService {
   }
 
   // TODO: TOKENS black list, revoke this token
-  signOut(token: string) {
-    return 'Logged out successfully ' + token;
+  async signOut(token: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync<JwtUserPayload>(token);
+      const user = await this.userService.findUserById(payload.sub);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // TODO: need to revoke refresh token repo as well, or it will be used to generate new access token
+      await this.tokenBlacklistService.addToBlacklist(token, payload.exp);
+
+      return 'Logged out successfully';
+    } catch (e: any) {
+      throw new UnauthorizedException('Invalid access token');
+    }
   }
 }

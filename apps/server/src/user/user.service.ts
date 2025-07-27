@@ -12,14 +12,18 @@ export class UserService {
     @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
-  async findByUserEmail(email: string) {
+  async findUserByEmail(email: string) {
     return this.userRepository.findOneBy({
       email,
     });
   }
 
+  async findUserById(id: number) {
+    return this.userRepository.findOneBy({ id });
+  }
+
   async create(dto: CreateUserDto) {
-    const existed = await this.findByUserEmail(dto.email);
+    const existed = await this.findUserByEmail(dto.email);
 
     if (existed) {
       throw new HttpException('用户名已被占用', 400);
