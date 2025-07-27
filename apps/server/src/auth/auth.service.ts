@@ -1,4 +1,5 @@
 import {
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -8,12 +9,18 @@ import * as bcrypt from 'bcrypt';
 import { UserService } from '@/user/user.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
+import { JwtConfig } from './jwt.config';
+import { ConfigType } from '@nestjs/config';
+import { JwtUser } from './strategies/jwt.strategy';
+import { User } from '@/user/entity/user.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    @Inject(JwtConfig.KEY)
+    private jwtConfig: ConfigType<typeof JwtConfig>,
   ) {}
 
   async signUp(dto: SignUpDto) {
@@ -24,16 +31,67 @@ export class AuthService {
   async signIn(dto: SignInDto) {
     const user = await this.validateUserEmail(dto.email, dto.password);
 
+    return this.generateTokens(user);
+  }
+
+  private async generateTokens(user: User) {
     const payload = {
-      sub: user.id,
       email: user.email,
     };
-
-    const token = await this.jwtService.signAsync(payload);
-
+    const [accessToken, refreshToken] = await Promise.all([
+      this.signToken(
+        user.id,
+        {
+          expiresIn: this.jwtConfig.accessTokenTtl,
+          secret: this.jwtConfig.accessTokenSecret,
+        },
+        payload,
+      ),
+      this.signToken(
+        user.id,
+        {
+          expiresIn: this.jwtConfig.refreshTokenTtl,
+          secret: this.jwtConfig.refreshTokenSecret,
+        },
+        payload,
+      ),
+    ]);
     return {
-      accessToken: token,
+      accessToken,
+      refreshToken,
     };
+  }
+
+  private async signToken<T>(
+    userId: number,
+    options: { expiresIn: string | number; secret: string },
+    payload?: T,
+  ) {
+    return await this.jwtService.signAsync(
+      {
+        sub: userId,
+        ...payload,
+      },
+      options,
+    );
+  }
+
+  async refreshToken(token: string) {
+    try {
+      // TODO: distinguish access token / refresh token jwt service
+      const payload = await this.jwtService.verifyAsync<JwtUser>(token, {
+        secret: this.jwtConfig.refreshTokenSecret,
+      });
+
+      const user = await this.userService.findByUserEmail(payload.email);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      return this.generateTokens(user);
+    } catch (_e) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 
   async validateUserEmail(email: string, password: string) {
