@@ -1,8 +1,8 @@
 import { CallHandler, ExecutionContext, NestInterceptor } from '@nestjs/common';
-import { Response, ResponseCode, isStandardResponse } from '../model/response';
+import { Response, isStandardResponse, resp } from '../model/response';
 import { Observable, map } from 'rxjs';
 
-export class ResponseInterceptor<T = any>
+export class ResponseInterceptor<T = unknown>
   implements NestInterceptor<T, Response<T>>
 {
   intercept(
@@ -10,20 +10,12 @@ export class ResponseInterceptor<T = any>
     next: CallHandler<T>,
   ): Observable<Response<T>> {
     return next.handle().pipe(
-      map((data) => {
+      map((data): Response<T> => {
         if (isStandardResponse(data)) {
-          return {
-            code: data.code ?? ResponseCode.SUCCESS,
-            message: data.message ?? 'success',
-            data: data.data,
-          };
+          return data as Response<T>;
         }
 
-        return {
-          code: ResponseCode.SUCCESS,
-          data,
-          message: 'success',
-        };
+        return resp<T>({ data });
       }),
     );
   }

@@ -4,18 +4,23 @@ export enum ResponseCode {
 
 export interface Response<T> {
   code: ResponseCode;
-  data: T;
+  data?: T;
   message: string;
 }
 
 const RESPONSE_KEY = Symbol('response');
 
-export function isStandardResponse(obj: any): obj is Response<any> {
+export function isStandardResponse<T>(obj: unknown): obj is Response<T> {
   return !!(obj && obj[RESPONSE_KEY]);
 }
 
 export function resp<T>(res: Partial<Response<T>>) {
-  const obj = { ...res };
+  const obj = {
+    code: ResponseCode.SUCCESS,
+    message: 'success',
+    ...res,
+  };
+
   Object.defineProperty(obj, RESPONSE_KEY, {
     value: true,
     enumerable: false,
