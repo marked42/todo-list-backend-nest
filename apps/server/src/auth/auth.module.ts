@@ -3,6 +3,7 @@ import { Global, Module, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { UserModule } from '@/user/user.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { CURRENT_USER } from './model';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -10,11 +11,14 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtConfigService } from './jwt.config';
 import { TokenBlacklistService } from './token-blacklist.service';
+import { RefreshTokenRepository } from './repository/refresh-token.repository';
+import { RefreshTokenEntity } from './entity/refresh-token.entity';
 
 @Global()
 @Module({
   imports: [
     UserModule,
+    TypeOrmModule.forFeature([RefreshTokenEntity]),
     JwtModule.registerAsync({
       useClass: JwtConfigService,
     }),
@@ -37,6 +41,7 @@ import { TokenBlacklistService } from './token-blacklist.service';
     LocalStrategy,
     JwtStrategy,
     TokenBlacklistService,
+    RefreshTokenRepository,
   ],
   exports: [CURRENT_USER],
 })

@@ -4,14 +4,13 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Request } from 'express';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtIgnoreExpirationAuthGuard } from './guard/auth-ignore-expiration.guard';
+import { AccessToken } from './access-token';
 
 @Controller('/auth')
 export class AuthController {
@@ -35,13 +34,8 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('/sign-out')
-  @UseGuards(AuthGuard('jwt'))
-  signOut(@Req() req: Request) {
-    // TODO: access token decorator
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      throw new Error('no token');
-    }
+  @UseGuards(JwtIgnoreExpirationAuthGuard)
+  signOut(@AccessToken() token: string) {
     return this.authService.signOut(token);
   }
 }
