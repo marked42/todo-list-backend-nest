@@ -5,6 +5,7 @@ import { ConfigType } from '@nestjs/config';
 import { JwtConfig } from '../jwt.config';
 import { JwtUserPayload, toJwtRequestUser } from '../model';
 import { TokenBlacklistService } from '../token-blacklist.service';
+import { accessTokenExtractor } from '../access-token';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -13,7 +14,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private tokenBlacklistService: TokenBlacklistService, // Assuming you have a service to handle token blacklisting
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: accessTokenExtractor,
       ignoreExpiration: false,
       secretOrKey: jwtConfig.accessTokenSecret,
       passReqToCallback: true,

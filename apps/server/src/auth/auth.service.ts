@@ -14,6 +14,7 @@ import { ConfigType } from '@nestjs/config';
 import { User } from '@/user/entity/user.entity';
 import { JwtUserPayload } from './model';
 import { TokenBlacklistService } from './token-blacklist.service';
+import { RefreshTokenRepository } from './repository/refresh-token.repository';
 
 @Injectable()
 export class AuthService {
@@ -22,7 +23,8 @@ export class AuthService {
     private jwtService: JwtService,
     @Inject(JwtConfig.KEY)
     private jwtConfig: ConfigType<typeof JwtConfig>,
-    private tokenBlacklistService: TokenBlacklistService, // Assuming you have a service to handle token blacklisting
+    private tokenBlacklistService: TokenBlacklistService,
+    private refreshTokenRepo: RefreshTokenRepository,
   ) {}
 
   async signUp(dto: SignUpDto) {
@@ -58,6 +60,15 @@ export class AuthService {
         payload,
       ),
     ]);
+    const refreshTokenPayload =
+      this.jwtService.decode<JwtUserPayload>(refreshToken);
+
+    // TODO: reuse refresh token and limit the number of refresh tokens per user
+    await this.refreshTokenRepo.saveToken(
+      refreshToken,
+      user.id,
+      refreshTokenPayload.exp,
+    );
     return {
       accessToken,
       refreshToken,
@@ -85,10 +96,18 @@ export class AuthService {
         secret: this.jwtConfig.refreshTokenSecret,
       });
 
+      const isRevoked = await this.refreshTokenRepo.isTokenRevoked(token);
+      if (isRevoked) {
+        throw new Error('Refresh token has been revoked');
+      }
+
       const user = await this.userService.findUserById(payload.sub);
       if (!user) {
         throw new NotFoundException('User not found');
       }
+
+      // refresh token rotation
+      await this.refreshTokenRepo.revokeToken(token);
 
       return this.generateTokens(user);
     } catch (_e) {
@@ -114,17 +133,22 @@ export class AuthService {
     return user;
   }
 
-  // TODO: TOKENS black list, revoke this token
-  async signOut(token: string) {
+  async signOut(accessToken: string) {
     try {
-      const payload = await this.jwtService.verifyAsync<JwtUserPayload>(token);
+      const payload = await this.jwtService.verifyAsync<JwtUserPayload>(
+        accessToken,
+        {
+          // sign out should work even if the access token is expired, so ignore expiration
+          ignoreExpiration: true,
+        },
+      );
       const user = await this.userService.findUserById(payload.sub);
       if (!user) {
         throw new NotFoundException('User not found');
       }
 
-      // TODO: need to revoke refresh token repo as well, or it will be used to generate new access token
-      await this.tokenBlacklistService.addToBlacklist(token, payload.exp);
+      // black list access token and leave refresh token intact
+      await this.tokenBlacklistService.addToBlacklist(accessToken, payload.exp);
 
       return 'Logged out successfully';
     } catch (e: any) {

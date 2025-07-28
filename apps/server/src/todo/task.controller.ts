@@ -18,10 +18,10 @@ import { ReorderTaskDto, ReorderTaskDtoClasses } from './dto/reorder-task.dto';
 import { MoveTaskDto, MoveTaskDtoClasses } from './dto/move-task.dto';
 import { TaskService } from './task.service';
 import { QueryTaskDto } from './dto/query-task.dto';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from '@/auth/guard/auth-ignore-expiration.guard';
 
 @Controller('tasks')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 

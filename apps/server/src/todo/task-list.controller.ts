@@ -12,10 +12,10 @@ import {
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskListDto } from './dto/create-task-list.dto';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from '@/auth/guard/auth-ignore-expiration.guard';
 
 @Controller('/task-lists')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class TaskListController {
   constructor(private taskService: TaskService) {}
 
