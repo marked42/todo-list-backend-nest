@@ -2,9 +2,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { ConfigType } from '@nestjs/config';
-import { JwtConfig } from '../jwt.config';
 import { JwtUserPayload, toJwtRequestUser } from '../model';
 import { accessTokenExtractor } from '../access-token';
+import { AccessTokenJwtConfig } from '@/token';
 
 @Injectable()
 export class JwtIgnoreExpirationStrategy extends PassportStrategy(
@@ -12,12 +12,13 @@ export class JwtIgnoreExpirationStrategy extends PassportStrategy(
   'jwt-ignore-expiration',
 ) {
   constructor(
-    @Inject(JwtConfig.KEY) private jwtConfig: ConfigType<typeof JwtConfig>,
+    @Inject(AccessTokenJwtConfig.KEY)
+    private jwtConfig: ConfigType<typeof AccessTokenJwtConfig>,
   ) {
     super({
       jwtFromRequest: accessTokenExtractor,
       ignoreExpiration: true,
-      secretOrKey: jwtConfig.accessTokenSecret,
+      secretOrKey: jwtConfig.secret,
     });
   }
 
