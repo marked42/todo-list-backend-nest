@@ -45,4 +45,14 @@ export class UserService {
 
     return !!user?.roles?.find((role) => role.code === RoleCode.Admin);
   }
+
+  async incrementTokenVersion(id: number) {
+    const user = await this.findUserById(id);
+    if (!user) {
+      throw new HttpException('用户不存在', 404);
+    }
+
+    user.tokenVersion += 1;
+    return this.userRepository.save(user);
+  }
 }

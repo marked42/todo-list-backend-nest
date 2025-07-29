@@ -35,4 +35,11 @@ export class User extends BaseEntity {
     default: true,
   })
   enabled: boolean;
+
+  @Column({
+    type: 'int',
+    default: 0,
+    nullable: true,
+  })
+  tokenVersion: number;
 }

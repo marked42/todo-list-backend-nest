@@ -39,65 +39,146 @@ export class AuthService {
   }
 
   private async generateTokens(user: User) {
-    const payload = {
-      email: user.email,
-    };
     const [accessToken, refreshToken] = await Promise.all([
-      this.signToken(
-        user.id,
-        {
-          expiresIn: this.jwtConfig.accessTokenTtl,
-          secret: this.jwtConfig.accessTokenSecret,
-        },
-        payload,
-      ),
-      this.signToken(
-        user.id,
-        {
-          expiresIn: this.jwtConfig.refreshTokenTtl,
-          secret: this.jwtConfig.refreshTokenSecret,
-        },
-        payload,
-      ),
+      this.generateAccessToken(user),
+      this.generateRefreshToken(user),
     ]);
-    const refreshTokenPayload =
-      this.jwtService.decode<JwtUserPayload>(refreshToken);
 
-    // TODO: reuse refresh token and limit the number of refresh tokens per user
-    await this.refreshTokenRepo.saveToken(
-      refreshToken,
-      user.id,
-      refreshTokenPayload.exp,
-    );
     return {
       accessToken,
       refreshToken,
     };
   }
 
-  private async signToken<T>(
-    userId: number,
-    options: { expiresIn: string | number; secret: string },
-    payload?: T,
-  ) {
-    return await this.jwtService.signAsync(
-      {
-        sub: userId,
-        ...payload,
-      },
-      options,
+  private getUserTokenPayload(user: User) {
+    return {
+      sub: user.id,
+      email: user.email,
+      device: this.getCurrentDeviceFingerprint(),
+      geoLocation: this.getCurrentGeoLocationFingerprint(),
+      version: this.getCurrentVersionFingerprint(),
+    };
+  }
+
+  private async generateAccessToken(user: User) {
+    const payload = this.getUserTokenPayload(user);
+
+    return this.jwtService.signAsync(payload, {
+      secret: this.jwtConfig.accessTokenSecret,
+      expiresIn: this.jwtConfig.accessTokenTtl,
+    });
+  }
+
+  private async generateRefreshToken(user: User) {
+    const payload = this.getUserTokenPayload(user);
+
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      expiresIn: this.jwtConfig.refreshTokenTtl,
+      secret: this.jwtConfig.refreshTokenSecret,
+    });
+
+    const refreshTokenPayload =
+      this.jwtService.decode<JwtUserPayload>(refreshToken);
+
+    await this.refreshTokenRepo.limitUserRefreshTokens(user.id);
+    await this.refreshTokenRepo.saveToken(
+      refreshToken,
+      user.id,
+      refreshTokenPayload.exp,
     );
+
+    return refreshToken;
+  }
+
+  async verifyRefreshToken(token: string) {
+    const payload = await this.jwtService.verifyAsync<JwtUserPayload>(token, {
+      secret: this.jwtConfig.refreshTokenSecret,
+    });
+
+    await Promise.all([
+      this.verifyRefreshTokenVersion(payload),
+      this.verifyRefreshTokenDeviceFingerprint(payload),
+      this.verifyRefreshTokenGeoLocation(payload),
+    ]);
+
+    return payload;
+  }
+
+  async verifyRefreshTokenVersion(payload: JwtUserPayload) {
+    const currentFingerPrint = await this.getCurrentVersionFingerprint();
+
+    if (payload.version !== currentFingerPrint) {
+      throw new UnauthorizedException('version mismatch');
+    }
+  }
+
+  getCurrentVersion() {
+    return '1.0.0'; // This can be replaced with a dynamic version retrieval logic
+  }
+
+  getCurrentVersionFingerprint() {
+    // This function can be used to get the current version of the application
+    // For example, you can use a service to get the app version
+    // Currently, it does nothing but can be implemented as needed
+    return bcrypt.hash(this.getCurrentVersion(), 10); // Example version, replace with actual logic if needed
+  }
+
+  /**
+   * verify geo location change
+   */
+  async verifyRefreshTokenGeoLocation(payload: JwtUserPayload) {
+    const currentFingerPrint = await this.getCurrentGeoLocationFingerprint();
+
+    if (payload.geoLocation !== currentFingerPrint) {
+      throw new UnauthorizedException('Geo location mismatch');
+    }
+  }
+
+  getCurrentGeoLocationFingerprint() {
+    return bcrypt.hash(JSON.stringify(this.getCurrentGeoLocation()), 10);
+  }
+
+  getCurrentGeoLocation() {
+    // This function can be used to get the current geo-location of the user
+    // For example, you can use a service to get the user's IP address and resolve it to a location
+    // Currently, it does nothing but can be implemented as needed
+    return {
+      country: 'implement country detection',
+      city: 'implement city detection',
+      ip: 'implement IP detection',
+    };
+  }
+
+  async verifyRefreshTokenDeviceFingerprint(payload: JwtUserPayload) {
+    const currentFingerPrint = await this.getCurrentDeviceFingerprint();
+
+    if (payload.device !== currentFingerPrint) {
+      throw new UnauthorizedException('Device fingerprint mismatch');
+    }
+  }
+
+  getCurrentDeviceFingerprint() {
+    return bcrypt.hash(JSON.stringify(this.getCurrentDevice()), 10);
+  }
+
+  getCurrentDevice() {
+    // This function can be used to get the current device information
+    // For example, you can get the device type, OS, browser, etc.
+    // Currently, it does nothing but can be implemented as needed
+    return {
+      deviceType: 'implement device type detection',
+      os: 'implement OS detection',
+      browser: 'implement browser detection',
+    };
   }
 
   async refreshToken(token: string) {
     try {
-      // TODO: distinguish access token / refresh token jwt service
-      const payload = await this.jwtService.verifyAsync<JwtUserPayload>(token, {
-        secret: this.jwtConfig.refreshTokenSecret,
-      });
+      const payload = await this.verifyRefreshToken(token);
 
       const isRevoked = await this.refreshTokenRepo.isTokenRevoked(token);
       if (isRevoked) {
+        await this.refreshTokenRepo.revokeAllUserTokens(payload.sub);
         throw new Error('Refresh token has been revoked');
       }
 
@@ -149,6 +230,7 @@ export class AuthService {
 
       // black list access token and leave refresh token intact
       await this.tokenBlacklistService.addToBlacklist(accessToken, payload.exp);
+      await this.userService.incrementTokenVersion(user.id);
 
       return 'Logged out successfully';
     } catch (e: any) {

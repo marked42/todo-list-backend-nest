@@ -28,6 +28,7 @@ export class AuthController {
   }
 
   @Post('/refresh-tokens')
+  // TODO: rate limit
   refreshToken(@Body('token') token: string) {
     return this.authService.refreshToken(token);
   }
