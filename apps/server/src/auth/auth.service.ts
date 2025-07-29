@@ -1,30 +1,27 @@
 import {
-  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserService } from '@/user/user.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
-import { JwtConfig } from './jwt.config';
-import { ConfigType } from '@nestjs/config';
 import { User } from '@/user/entity/user.entity';
 import { JwtUserPayload } from './model';
 import { TokenBlacklistService } from './token-blacklist.service';
 import { RefreshTokenRepository } from './repository/refresh-token.repository';
+import { AccessTokenJwtService } from '@/token/access-token-jwt.service';
+import { RefreshTokenJwtService } from '@/token/refresh-token-jwt.service.ts';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
-    private jwtService: JwtService,
-    @Inject(JwtConfig.KEY)
-    private jwtConfig: ConfigType<typeof JwtConfig>,
     private tokenBlacklistService: TokenBlacklistService,
     private refreshTokenRepo: RefreshTokenRepository,
+    private accessTokenJwtService: AccessTokenJwtService,
+    private refreshTokenJwtService: RefreshTokenJwtService,
   ) {}
 
   async signUp(dto: SignUpDto) {
@@ -63,22 +60,17 @@ export class AuthService {
   private async generateAccessToken(user: User) {
     const payload = this.getUserTokenPayload(user);
 
-    return this.jwtService.signAsync(payload, {
-      secret: this.jwtConfig.accessTokenSecret,
-      expiresIn: this.jwtConfig.accessTokenTtl,
-    });
+    return this.accessTokenJwtService.signAsync(payload);
   }
 
+  // TODO: refresh-token-repo move to token module
   private async generateRefreshToken(user: User) {
     const payload = this.getUserTokenPayload(user);
 
-    const refreshToken = await this.jwtService.signAsync(payload, {
-      expiresIn: this.jwtConfig.refreshTokenTtl,
-      secret: this.jwtConfig.refreshTokenSecret,
-    });
+    const refreshToken = await this.refreshTokenJwtService.signAsync(payload);
 
     const refreshTokenPayload =
-      this.jwtService.decode<JwtUserPayload>(refreshToken);
+      this.refreshTokenJwtService.decode<JwtUserPayload>(refreshToken);
 
     await this.refreshTokenRepo.limitUserRefreshTokens(user.id);
     await this.refreshTokenRepo.saveToken(
@@ -91,9 +83,8 @@ export class AuthService {
   }
 
   async verifyRefreshToken(token: string) {
-    const payload = await this.jwtService.verifyAsync<JwtUserPayload>(token, {
-      secret: this.jwtConfig.refreshTokenSecret,
-    });
+    const payload =
+      await this.refreshTokenJwtService.verifyAsync<JwtUserPayload>(token);
 
     await Promise.all([
       this.verifyRefreshTokenVersion(payload),
@@ -216,13 +207,14 @@ export class AuthService {
 
   async signOut(accessToken: string) {
     try {
-      const payload = await this.jwtService.verifyAsync<JwtUserPayload>(
-        accessToken,
-        {
-          // sign out should work even if the access token is expired, so ignore expiration
-          ignoreExpiration: true,
-        },
-      );
+      const payload =
+        await this.accessTokenJwtService.verifyAsync<JwtUserPayload>(
+          accessToken,
+          {
+            // sign out should work even if the access token is expired, so ignore expiration
+            ignoreExpiration: true,
+          },
+        );
       const user = await this.userService.findUserById(payload.sub);
       if (!user) {
         throw new NotFoundException('User not found');

@@ -10,19 +10,17 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { JwtConfigService } from './jwt.config';
 import { TokenBlacklistService } from './token-blacklist.service';
 import { RefreshTokenRepository } from './repository/refresh-token.repository';
 import { RefreshTokenEntity } from './entity/refresh-token.entity';
+import { TokenModule } from '@/token/token.module';
 
 @Global()
 @Module({
   imports: [
     UserModule,
     TypeOrmModule.forFeature([RefreshTokenEntity]),
-    JwtModule.registerAsync({
-      useClass: JwtConfigService,
-    }),
+    TokenModule.forRoot(),
     // eslint-disable-next-line
     ThrottlerModule.forRoot(),
   ],
