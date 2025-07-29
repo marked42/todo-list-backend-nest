@@ -8,7 +8,6 @@ export class RefreshTokenEntity {
   @Column()
   token: string;
 
-  // TODO: user id string or number?
   @Column()
   userId: number;
 
@@ -17,4 +16,35 @@ export class RefreshTokenEntity {
 
   @Column({ default: false })
   revoked: boolean;
+
+  @Column({
+    type: 'varchar',
+    length: 15,
+    nullable: true,
+    comment: 'IP address of the user when the token was created', // Optional comment for clarity
+  })
+  ip?: string;
+
+  @Column({
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+    comment: 'Device information of the user when the token was created', // Optional comment for clarity
+  })
+  device?: string;
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  location?: string;
+
+  @Column({
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+    comment: 'User agent of the user when the token was created', // Optional comment for clarity
+  })
+  userAgent?: string;
 }
