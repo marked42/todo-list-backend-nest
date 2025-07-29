@@ -11,6 +11,7 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { JwtIgnoreExpirationAuthGuard } from './guard/auth-ignore-expiration.guard';
 import { AccessToken } from './access-token';
+import { UserAwareThrottlerGuard } from './guard/user-aware-throttler.guard';
 
 @Controller('/auth')
 export class AuthController {
@@ -28,7 +29,7 @@ export class AuthController {
   }
 
   @Post('/refresh-tokens')
-  // TODO: rate limit
+  @UseGuards(UserAwareThrottlerGuard)
   refreshToken(@Body('token') token: string) {
     return this.authService.refreshToken(token);
   }

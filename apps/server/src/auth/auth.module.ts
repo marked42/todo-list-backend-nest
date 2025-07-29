@@ -2,6 +2,7 @@ import { Request } from 'express';
 import { Global, Module, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { UserModule } from '@/user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CURRENT_USER } from './model';
@@ -22,6 +23,8 @@ import { RefreshTokenEntity } from './entity/refresh-token.entity';
     JwtModule.registerAsync({
       useClass: JwtConfigService,
     }),
+    // eslint-disable-next-line
+    ThrottlerModule.forRoot(),
   ],
   controllers: [AuthController],
   providers: [
