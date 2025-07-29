@@ -15,9 +15,8 @@ export interface JwtUserPayload extends JwtUserBasicPayload {
   iat: number;
 }
 
-export interface JwtRequestUser {
-  id: number;
-  email: string;
+export interface JwtRequestUser extends Omit<JwtUserPayload, 'sub'> {
+  id: JwtUserPayload['sub'];
 }
 
 export function toJwtRequestUser(payload: JwtUserPayload): JwtRequestUser {
