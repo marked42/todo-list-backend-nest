@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   ForbiddenException,
-  Inject,
   Injectable,
   NotFoundException,
   Scope,
@@ -9,7 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { User } from '@/user/entity/user.entity';
-import { CURRENT_USER } from '@/auth/model';
+import { InjectCurrentUser } from '@/auth/model';
 import { TaskList } from './entity/task-list.entity';
 import { Task } from './entity/task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -26,7 +25,7 @@ export class TaskService {
   constructor(
     @InjectRepository(TaskList) private taskListRepo: Repository<TaskList>,
     @InjectRepository(Task) private taskRepo: Repository<Task>,
-    @Inject(CURRENT_USER) private user: () => User,
+    @InjectCurrentUser() private user: () => User,
     private userService: UserService,
   ) {}
 
