@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { User } from '@/user/entity/user.entity';
-import { CURRENT_USER } from '@/auth/model';
+import { CURRENT_USER_TOKEN } from '@/auth/model';
 import { TaskService } from './task.service';
 import { TaskList } from './entity/task-list.entity';
 import { Task } from './entity/task.entity';
@@ -161,7 +161,7 @@ describe('TaskService', () => {
       providers: [
         TaskService,
         {
-          provide: CURRENT_USER,
+          provide: CURRENT_USER_TOKEN,
           useValue: () => mockCurrentUser,
         },
         {

@@ -3,7 +3,7 @@ import { Global, Module, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { UserModule } from '@/user/user.module';
-import { CURRENT_USER } from './model';
+import { CURRENT_USER_TOKEN } from './model';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LocalStrategy } from './strategies/local.strategy';
@@ -23,7 +23,7 @@ import { TokenModule } from '@/token/token.module';
   providers: [
     AuthService,
     {
-      provide: CURRENT_USER,
+      provide: CURRENT_USER_TOKEN,
       /**
        * use a factory to ensure it is set per request,
        * injections happens on startup when request.user is undefined,
@@ -37,6 +37,6 @@ import { TokenModule } from '@/token/token.module';
     LocalStrategy,
     JwtStrategy,
   ],
-  exports: [CURRENT_USER],
+  exports: [CURRENT_USER_TOKEN],
 })
 export class AuthModule {}
