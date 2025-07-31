@@ -1,3 +1,4 @@
+export * from './access-token';
 export * from './access-token.config';
 export * from './access-token-jwt.service';
 export * from './refresh-token.config';
