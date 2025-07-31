@@ -9,11 +9,11 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { User } from '@/user/entity/user.entity';
 import { JwtUserPayload } from './model';
-import { RefreshTokenRepository } from './repository/refresh-token.repository';
 import {
   AccessTokenJwtService,
   RefreshTokenJwtService,
   TokenBlacklistService,
+  RefreshTokenRepository,
 } from '@/token';
 
 @Injectable()
