@@ -3,21 +3,18 @@ import { Global, Module, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { UserModule } from '@/user/user.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { CURRENT_USER } from './model';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { RefreshTokenRepository } from './repository/refresh-token.repository';
-import { RefreshTokenEntity } from './entity/refresh-token.entity';
 import { TokenModule } from '@/token/token.module';
 
 @Global()
 @Module({
   imports: [
     UserModule,
-    TypeOrmModule.forFeature([RefreshTokenEntity]),
+    // TypeOrmModule.forFeature([RefreshTokenEntity]),
     TokenModule.forRoot(),
     // eslint-disable-next-line
     ThrottlerModule.forRoot(),
@@ -39,7 +36,6 @@ import { TokenModule } from '@/token/token.module';
     },
     LocalStrategy,
     JwtStrategy,
-    RefreshTokenRepository,
   ],
   exports: [CURRENT_USER],
 })

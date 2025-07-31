@@ -4,3 +4,6 @@ export * from './refresh-token.config';
 export * from './refresh-token-jwt.service.ts';
 export * from './token-blacklist.service';
 export * from './token.module';
+export * from './entity/refresh-token.entity';
+export * from './repository/refresh-token.repository';
+export * from './task/cleanup-tokens.task';
