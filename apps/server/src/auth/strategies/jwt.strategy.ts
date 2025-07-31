@@ -3,9 +3,8 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { ConfigType } from '@nestjs/config';
 import { JwtUserPayload, toJwtRequestUser } from '../model';
-import { TokenBlacklistService } from '../token-blacklist.service';
 import { accessTokenExtractor } from '../access-token';
-import { AccessTokenJwtConfig } from '@/token';
+import { AccessTokenJwtConfig, TokenBlacklistService } from '@/token';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

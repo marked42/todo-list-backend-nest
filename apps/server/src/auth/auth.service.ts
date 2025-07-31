@@ -9,10 +9,12 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { User } from '@/user/entity/user.entity';
 import { JwtUserPayload } from './model';
-import { TokenBlacklistService } from './token-blacklist.service';
 import { RefreshTokenRepository } from './repository/refresh-token.repository';
-import { AccessTokenJwtService } from '@/token/access-token-jwt.service';
-import { RefreshTokenJwtService } from '@/token/refresh-token-jwt.service.ts';
+import {
+  AccessTokenJwtService,
+  RefreshTokenJwtService,
+  TokenBlacklistService,
+} from '@/token';
 
 @Injectable()
 export class AuthService {

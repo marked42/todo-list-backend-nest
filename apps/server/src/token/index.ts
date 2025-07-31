@@ -1,3 +1,6 @@
 export * from './access-token.config';
+export * from './access-token-jwt.service';
 export * from './refresh-token.config';
+export * from './refresh-token-jwt.service.ts';
+export * from './token-blacklist.service';
 export * from './token.module';
