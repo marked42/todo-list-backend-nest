@@ -5,6 +5,7 @@ import { AccessTokenJwtConfig } from './access-token.config';
 import { RefreshTokenJwtConfig } from './refresh-token.config';
 import { AccessTokenJwtService } from './access-token-jwt.service';
 import { RefreshTokenJwtService } from './refresh-token-jwt.service.ts';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 @Module({})
 export class TokenModule {
@@ -57,12 +58,17 @@ export class TokenModule {
         ConfigModule.forFeature(AccessTokenJwtConfig),
         ConfigModule.forFeature(RefreshTokenJwtConfig),
       ],
-      providers: [...accessTokenProviders, ...refreshTokenProviders],
+      providers: [
+        ...accessTokenProviders,
+        ...refreshTokenProviders,
+        TokenBlacklistService,
+      ],
       exports: [
         AccessTokenJwtConfig.KEY,
         AccessTokenJwtService,
         RefreshTokenJwtConfig.KEY,
         RefreshTokenJwtService,
+        TokenBlacklistService,
       ],
     };
   }
