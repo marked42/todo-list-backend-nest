@@ -2,9 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { ConfigType } from '@nestjs/config';
+import { AccessTokenJwtConfig, accessTokenExtractor } from '@/token';
 import { JwtUserPayload, toJwtRequestUser } from '../model';
-import { accessTokenExtractor } from '../access-token';
-import { AccessTokenJwtConfig } from '@/token';
 
 @Injectable()
 export class JwtIgnoreExpirationStrategy extends PassportStrategy(

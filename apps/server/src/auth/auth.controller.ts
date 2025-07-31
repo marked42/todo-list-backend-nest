@@ -10,8 +10,8 @@ import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { JwtIgnoreExpirationAuthGuard } from './guard/auth-ignore-expiration.guard';
-import { AccessToken } from './access-token';
 import { UserAwareThrottlerGuard } from './guard/user-aware-throttler.guard';
+import { AccessToken } from '@/token';
 
 @Controller('/auth')
 export class AuthController {
