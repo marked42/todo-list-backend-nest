@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
+    // TODO: use forFeature
     TypeOrmModule.forRootAsync({
       useClass: DataBaseConfigService,
     }),
