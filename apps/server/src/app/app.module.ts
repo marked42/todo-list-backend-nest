@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
-import { HttpExceptionFilter } from '@/common/filter/http-exception.filter';
-import { TodoModule } from '@/todo/todo.module';
-import { AppConfigModule } from '@/config/app-config.module';
-import { DatabaseModule } from '@/database/database.module';
+import { HttpExceptionFilter } from '@/common';
+import { TodoModule } from '@/todo';
+import { AppConfigModule } from '@/config';
+import { DatabaseModule } from '@/database';
+import { AuthModule } from '@/auth';
+import { UserModule } from '@/user';
 import { AppController } from './app.controller';
-import { AuthModule } from '@/auth/auth.module';
-import { UserModule } from '@/user/user.module';
 
 @Module({
   imports: [
