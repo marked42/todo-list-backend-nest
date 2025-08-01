@@ -1,21 +1,15 @@
 import { Global, Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { UserModule } from '@/user/user.module';
+import { TokenModule } from '@/token';
+import { UserModule } from '@/user';
 import { currentUserProvider } from './current-user';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { LocalStrategy } from './strategies/local.strategy';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { TokenModule } from '@/token/token.module';
+import { LocalStrategy, JwtStrategy } from './strategies';
 
 @Global()
 @Module({
-  imports: [
-    UserModule,
-    TokenModule.forRoot(),
-    // eslint-disable-next-line
-    ThrottlerModule.forRoot(),
-  ],
+  imports: [UserModule, TokenModule.forRoot(), ThrottlerModule.forRoot()],
   controllers: [AuthController],
   providers: [AuthService, currentUserProvider, LocalStrategy, JwtStrategy],
   exports: [AuthService],

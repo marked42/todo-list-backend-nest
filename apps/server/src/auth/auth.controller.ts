@@ -6,12 +6,10 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { SignUpDto } from './dto/sign-up.dto';
-import { SignInDto } from './dto/sign-in.dto';
-import { JwtIgnoreExpirationAuthGuard } from './guard/auth-ignore-expiration.guard';
-import { UserAwareThrottlerGuard } from './guard/user-aware-throttler.guard';
 import { AccessToken } from '@/token';
+import { AuthService } from './auth.service';
+import { SignUpDto, SignInDto } from './dto';
+import { JwtIgnoreExpirationAuthGuard, UserAwareThrottlerGuard } from './guard';
 
 @Controller('/auth')
 export class AuthController {
