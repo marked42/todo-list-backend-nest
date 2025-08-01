@@ -3,9 +3,7 @@ import {
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ExtractJwt } from 'passport-jwt';
-
-export const accessTokenExtractor = ExtractJwt.fromAuthHeaderAsBearerToken();
+import { accessTokenExtractor } from '../extractor/access-token.extractor';
 
 export const AccessToken = createParamDecorator((ctx: ExecutionContext) => {
   // Assuming the user is stored in the request object

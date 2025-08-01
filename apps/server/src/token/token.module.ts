@@ -1,65 +1,66 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-import { AccessTokenJwtConfig } from './access-token.config';
-import { RefreshTokenJwtConfig } from './refresh-token.config';
-import { AccessTokenJwtService } from './access-token-jwt.service';
-import { RefreshTokenJwtService } from './refresh-token-jwt.service.ts';
-import { TokenBlacklistService } from './token-blacklist.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenEntity } from './entity/refresh-token.entity';
-import { RefreshTokenService } from './service/refresh-token.service';
+import { AccessTokenConfig, RefreshTokenConfig } from './config';
+import {
+  AccessTokenJwtService,
+  RefreshTokenJwtService,
+  TokenBlacklistService,
+  RefreshTokenService,
+} from './service';
 
 @Module({})
 export class TokenModule {
   static forRoot(): DynamicModule {
     const accessTokenProviders = [
       {
-        provide: AccessTokenJwtConfig.KEY,
-        useFactory: AccessTokenJwtConfig,
+        provide: AccessTokenConfig.KEY,
+        useFactory: AccessTokenConfig,
       },
       {
         provide: AccessTokenJwtService,
-        useFactory: (jwtConfig: ConfigType<typeof AccessTokenJwtConfig>) => {
+        useFactory: (config: ConfigType<typeof AccessTokenConfig>) => {
           return new JwtService({
             signOptions: {
-              audience: jwtConfig.audience,
-              issuer: jwtConfig.issuer,
-              expiresIn: jwtConfig.expiresIn,
+              audience: config.jwtOptions.audience,
+              issuer: config.jwtOptions.issuer,
+              expiresIn: config.jwtOptions.expiresIn,
             },
-            secret: jwtConfig.secret,
+            secret: config.jwtOptions.secret,
           });
         },
-        inject: [AccessTokenJwtConfig.KEY],
+        inject: [AccessTokenConfig.KEY],
       },
     ];
 
     const refreshTokenProviders = [
       {
-        provide: RefreshTokenJwtConfig.KEY,
-        useFactory: RefreshTokenJwtConfig,
+        provide: RefreshTokenConfig.KEY,
+        useFactory: RefreshTokenConfig,
       },
       {
         provide: RefreshTokenJwtService,
-        useFactory: (jwtConfig: ConfigType<typeof RefreshTokenJwtConfig>) => {
+        useFactory: (config: ConfigType<typeof RefreshTokenConfig>) => {
           return new JwtService({
             signOptions: {
-              audience: jwtConfig.audience,
-              issuer: jwtConfig.issuer,
-              expiresIn: jwtConfig.expiresIn,
+              audience: config.jwtOptions.audience,
+              issuer: config.jwtOptions.issuer,
+              expiresIn: config.jwtOptions.expiresIn,
             },
-            secret: jwtConfig.secret,
+            secret: config.jwtOptions.secret,
           });
         },
-        inject: [RefreshTokenJwtConfig.KEY],
+        inject: [RefreshTokenConfig.KEY],
       },
     ];
 
     return {
       module: TokenModule,
       imports: [
-        ConfigModule.forFeature(AccessTokenJwtConfig),
-        ConfigModule.forFeature(RefreshTokenJwtConfig),
+        ConfigModule.forFeature(AccessTokenConfig),
+        ConfigModule.forFeature(RefreshTokenConfig),
         TypeOrmModule.forFeature([RefreshTokenEntity]),
       ],
       providers: [
@@ -69,12 +70,12 @@ export class TokenModule {
         RefreshTokenService,
       ],
       exports: [
-        AccessTokenJwtConfig.KEY,
+        AccessTokenConfig.KEY,
         AccessTokenJwtService,
-        RefreshTokenJwtConfig.KEY,
+        RefreshTokenConfig.KEY,
         RefreshTokenJwtService,
-        TokenBlacklistService,
         RefreshTokenService,
+        TokenBlacklistService,
       ],
     };
   }

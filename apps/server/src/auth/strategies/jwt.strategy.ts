@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { ConfigType } from '@nestjs/config';
 import {
-  AccessTokenJwtConfig,
+  AccessTokenConfig,
   accessTokenExtractor,
   TokenBlacklistService,
 } from '@/token';
@@ -12,14 +12,14 @@ import { JwtUserPayload, toJwtRequestUser } from '../model';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    @Inject(AccessTokenJwtConfig.KEY)
-    private jwtConfig: ConfigType<typeof AccessTokenJwtConfig>,
+    @Inject(AccessTokenConfig.KEY)
+    private config: ConfigType<typeof AccessTokenConfig>,
     private tokenBlacklistService: TokenBlacklistService, // Assuming you have a service to handle token blacklisting
   ) {
     super({
       jwtFromRequest: accessTokenExtractor,
       ignoreExpiration: false,
-      secretOrKey: jwtConfig.secret,
+      secretOrKey: config.jwtOptions.secret,
       passReqToCallback: true,
     });
   }
