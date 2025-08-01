@@ -6,9 +6,10 @@ import { Task } from './entity/task.entity';
 import { TaskList } from './entity/task-list.entity';
 import { TaskListController } from './task-list.controller';
 import { UserModule } from '@/user/user.module';
+import { AuthModule } from '@/auth';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Task, TaskList]), UserModule],
+  imports: [TypeOrmModule.forFeature([Task, TaskList]), UserModule, AuthModule],
   controllers: [TaskController, TaskListController],
   providers: [TaskService],
   exports: [],
