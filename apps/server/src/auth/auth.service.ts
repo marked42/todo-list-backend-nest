@@ -13,7 +13,7 @@ import {
   AccessTokenJwtService,
   RefreshTokenJwtService,
   TokenBlacklistService,
-  RefreshTokenRepository,
+  RefreshTokenService,
 } from '@/token';
 
 @Injectable()
@@ -21,7 +21,7 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private tokenBlacklistService: TokenBlacklistService,
-    private refreshTokenRepo: RefreshTokenRepository,
+    private refreshTokenRepo: RefreshTokenService,
     private accessTokenJwtService: AccessTokenJwtService,
     private refreshTokenJwtService: RefreshTokenJwtService,
   ) {}

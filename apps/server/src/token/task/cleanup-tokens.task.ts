@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { RefreshTokenRepository } from '../repository/refresh-token.repository';
+import { RefreshTokenService } from '../service/refresh-token.service';
 
 @Injectable()
 export class CleanupTokensTask {
-  constructor(private refreshTokenRepo: RefreshTokenRepository) {}
+  constructor(private refreshTokenRepo: RefreshTokenService) {}
 
   /**
    * Runs every day at midnight
