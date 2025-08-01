@@ -16,12 +16,3 @@ export interface JwtUserPayload extends JwtUserBasicPayload {
 export interface JwtRequestUser extends Omit<JwtUserPayload, 'sub'> {
   id: JwtUserPayload['sub'];
 }
-
-export function toJwtRequestUser(payload: JwtUserPayload): JwtRequestUser {
-  const { sub, ...rest } = payload;
-
-  return {
-    id: sub,
-    ...rest,
-  };
-}

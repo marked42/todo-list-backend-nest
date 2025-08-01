@@ -4,7 +4,7 @@ import {
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtRequestUser } from '../model';
+import { JwtRequestUser } from '../interface';
 
 export const CurrentUser = createParamDecorator(
   (key: keyof JwtRequestUser, ctx: ExecutionContext) => {
