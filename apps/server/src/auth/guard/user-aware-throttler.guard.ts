@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { Request } from 'express';
-import { JwtRequestUser } from '../model';
+import { JwtRequestUser } from '../interface';
 
 @Injectable()
 export class UserAwareThrottlerGuard extends ThrottlerGuard {

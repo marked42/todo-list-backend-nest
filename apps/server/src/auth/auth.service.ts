@@ -8,7 +8,7 @@ import { UserService } from '@/user/user.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { User } from '@/user/entity/user.entity';
-import { JwtUserPayload } from './model';
+import { JwtUserPayload } from './interface';
 import {
   AccessTokenJwtService,
   RefreshTokenJwtService,

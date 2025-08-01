@@ -7,7 +7,8 @@ import {
   accessTokenExtractor,
   TokenBlacklistService,
 } from '@/token';
-import { JwtUserPayload, toJwtRequestUser } from '../model';
+import { JwtUserPayload } from '../interface';
+import { toJwtRequestUser } from '../util';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
