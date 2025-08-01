@@ -2,9 +2,8 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from './entity/user.entity';
+import { User, RoleCode } from './entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { RoleCode } from './entity/role.entity';
 
 @Injectable()
 export class UserService {

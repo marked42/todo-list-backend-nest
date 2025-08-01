@@ -1,7 +1,8 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { JwtAuthGuard } from '@/auth/guard/auth-ignore-expiration.guard';
+// circular dependency @/auth
+import { JwtAuthGuard } from '@/auth/guard';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)

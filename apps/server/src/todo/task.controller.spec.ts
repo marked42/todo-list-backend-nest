@@ -1,13 +1,15 @@
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { TaskMoveResult, TaskPosition } from './model';
+import { Task } from './entity';
+import {
+  AbsoluteReorderTaskDto,
+  AbsoluteMoveTaskDto,
+  CreateTaskDto,
+  UpdateTaskDto,
+} from './dto';
 import { TaskController } from './task.controller';
 import { TaskService } from './task.service';
-import { Task } from './entity/task.entity';
-import { TaskMoveResult, TaskPosition } from './model';
-import { AbsoluteMoveTaskDto } from './dto/move-task.dto';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
-import { AbsoluteReorderTaskDto } from './dto/reorder-task.dto';
 
 describe('TaskController', () => {
   let controller: TaskController;

@@ -10,15 +10,19 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { UnionTypeValidationPipe } from '@/common/decorator/union-type-validation-pipe.decorator';
+import { JwtAuthGuard } from '@/auth';
+import { UnionTypeValidationPipe } from '@/common';
 import { TaskMoveResult } from './model';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
-import { ReorderTaskDto, ReorderTaskDtoClasses } from './dto/reorder-task.dto';
-import { MoveTaskDto, MoveTaskDtoClasses } from './dto/move-task.dto';
+import {
+  ReorderTaskDto,
+  ReorderTaskDtoClasses,
+  MoveTaskDto,
+  MoveTaskDtoClasses,
+  CreateTaskDto,
+  UpdateTaskDto,
+  QueryTaskDto,
+} from './dto';
 import { TaskService } from './task.service';
-import { QueryTaskDto } from './dto/query-task.dto';
-import { JwtAuthGuard } from '@/auth/guard/auth-ignore-expiration.guard';
 
 @Controller('tasks')
 @UseGuards(JwtAuthGuard)
