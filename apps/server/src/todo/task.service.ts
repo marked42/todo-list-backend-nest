@@ -7,8 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { User } from '@/user/entity/user.entity';
-import { InjectCurrentUser } from '@/auth/model';
+import { AuthService } from '@/auth';
 import { TaskList } from './entity/task-list.entity';
 import { Task } from './entity/task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -25,12 +24,12 @@ export class TaskService {
   constructor(
     @InjectRepository(TaskList) private taskListRepo: Repository<TaskList>,
     @InjectRepository(Task) private taskRepo: Repository<Task>,
-    @InjectCurrentUser() private user: () => User,
     private userService: UserService,
+    private authService: AuthService,
   ) {}
 
   private get userId() {
-    return this.user().id;
+    return this.authService.currentUser.id;
   }
 
   async getTaskLists() {

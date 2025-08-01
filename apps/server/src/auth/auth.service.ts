@@ -15,6 +15,7 @@ import {
   TokenBlacklistService,
   RefreshTokenService,
 } from '@/token';
+import { InjectCurrentUser } from './current-user';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +25,20 @@ export class AuthService {
     private refreshTokenRepo: RefreshTokenService,
     private accessTokenJwtService: AccessTokenJwtService,
     private refreshTokenJwtService: RefreshTokenJwtService,
+    @InjectCurrentUser()
+    private _currentUser: () => User,
   ) {}
+
+  static mockServiceWithSpecifiedCurrentUser(currentUser: User) {
+    return {
+      provide: AuthService,
+      useValue: { currentUser },
+    };
+  }
+
+  get currentUser() {
+    return this._currentUser();
+  }
 
   async signUp(dto: SignUpDto) {
     const user = await this.userService.create(dto);

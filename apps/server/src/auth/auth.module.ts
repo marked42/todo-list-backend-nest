@@ -1,9 +1,7 @@
-import { Request } from 'express';
-import { Global, Module, Scope } from '@nestjs/common';
-import { REQUEST } from '@nestjs/core';
+import { Global, Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { UserModule } from '@/user/user.module';
-import { CURRENT_USER_TOKEN } from './model';
+import { currentUserProvider } from './current-user';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LocalStrategy } from './strategies/local.strategy';
@@ -14,29 +12,12 @@ import { TokenModule } from '@/token/token.module';
 @Module({
   imports: [
     UserModule,
-    // TypeOrmModule.forFeature([RefreshTokenEntity]),
     TokenModule.forRoot(),
     // eslint-disable-next-line
     ThrottlerModule.forRoot(),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    {
-      provide: CURRENT_USER_TOKEN,
-      /**
-       * use a factory to ensure it is set per request,
-       * injections happens on startup when request.user is undefined,
-       * request.user is set by passport after authentication for each request,
-       * so returns a function delaying the access to request.user
-       */
-      useFactory: (request: Request) => () => request.user,
-      inject: [REQUEST],
-      scope: Scope.REQUEST,
-    },
-    LocalStrategy,
-    JwtStrategy,
-  ],
-  exports: [CURRENT_USER_TOKEN],
+  providers: [AuthService, currentUserProvider, LocalStrategy, JwtStrategy],
+  exports: [AuthService],
 })
 export class AuthModule {}

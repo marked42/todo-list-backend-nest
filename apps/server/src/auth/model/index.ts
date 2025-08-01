@@ -1,11 +1,3 @@
-import { Inject } from '@nestjs/common';
-
-export const CURRENT_USER_TOKEN = Symbol('CURRENT_USER_TOKEN');
-
-export function InjectCurrentUser() {
-  return Inject(CURRENT_USER_TOKEN);
-}
-
 export interface JwtUserBasicPayload {
   sub: number;
   email: string;

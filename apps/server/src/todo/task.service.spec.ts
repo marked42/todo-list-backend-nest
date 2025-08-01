@@ -3,7 +3,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { User } from '@/user/entity/user.entity';
-import { CURRENT_USER_TOKEN } from '@/auth/model';
 import { TaskService } from './task.service';
 import { TaskList } from './entity/task-list.entity';
 import { Task } from './entity/task.entity';
@@ -23,6 +22,7 @@ import {
 import { MoveTaskDto } from './dto/move-task.dto';
 import { QueryTaskDto } from './dto/query-task.dto';
 import { UserService } from '@/user/user.service';
+import { AuthService } from '@/auth';
 
 const getEntityId = (entity: { id: number }) => entity.id;
 
@@ -140,7 +140,7 @@ describe('TaskService', () => {
     email: 'test@example.com',
     name: 'User 1',
     encryptedPassword: 'pass1',
-  };
+  } as User;
   const ownedByCurrentUser = (entity: { creatorId: number }) =>
     entity.creatorId === mockCurrentUser.id;
   const unownedByCurrentUser = (entity: { creatorId: number }) =>
@@ -160,10 +160,7 @@ describe('TaskService', () => {
       ],
       providers: [
         TaskService,
-        {
-          provide: CURRENT_USER_TOKEN,
-          useValue: () => mockCurrentUser,
-        },
+        AuthService.mockServiceWithSpecifiedCurrentUser(mockCurrentUser),
         {
           provide: UserService,
           useValue: userService,
