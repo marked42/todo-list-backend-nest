@@ -20,7 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: accessTokenExtractor,
       ignoreExpiration: false,
-      secretOrKey: config.jwtOptions.secret,
+      secretOrKey: config.jwtModuleOptions.secret,
       passReqToCallback: true,
     });
   }
