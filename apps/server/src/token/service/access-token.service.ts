@@ -8,7 +8,7 @@ import { type Redis } from 'ioredis';
 import RedisMock from 'ioredis-mock';
 
 @Injectable()
-export class TokenBlacklistService
+export class AccessTokenService
   implements OnApplicationBootstrap, OnApplicationShutdown
 {
   private redisClient: Redis;
