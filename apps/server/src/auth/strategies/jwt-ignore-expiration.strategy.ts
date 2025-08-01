@@ -18,7 +18,7 @@ export class JwtIgnoreExpirationStrategy extends PassportStrategy(
     super({
       jwtFromRequest: accessTokenExtractor,
       ignoreExpiration: true,
-      secretOrKey: config.jwtOptions.secret,
+      secretOrKey: config.jwtModuleOptions.secret,
     });
   }
 

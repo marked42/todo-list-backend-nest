@@ -2,24 +2,25 @@ import { FindManyOptions, Not, Repository } from 'typeorm';
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigType } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { JwtUserBasicPayload, JwtUserPayload } from '@/auth';
 import { RefreshTokenEntity } from '../entity/refresh-token.entity';
 import { RefreshTokenConfig } from '../config/refresh-token.config';
-import { RefreshTokenJwtService } from './refresh-token-jwt.service.ts';
 
 export function secondsToDate(seconds: number) {
   return new Date(seconds * 1000);
 }
 
 @Injectable()
-export class RefreshTokenService {
+export class RefreshTokenService extends JwtService {
   constructor(
     @InjectRepository(RefreshTokenEntity)
     private readonly refreshTokenRepo: Repository<RefreshTokenEntity>,
     @Inject(RefreshTokenConfig.KEY)
     private readonly refreshTokenConfig: ConfigType<typeof RefreshTokenConfig>,
-    private readonly jwtService: RefreshTokenJwtService,
-  ) {}
+  ) {
+    super(refreshTokenConfig.jwtModuleOptions);
+  }
 
   async saveToken(token: string, userId: number, expiresAt: number) {
     return this.refreshTokenRepo.save({
@@ -50,12 +51,12 @@ export class RefreshTokenService {
   }
 
   getTokenExpiresAt(token: string) {
-    const payload = this.jwtService.decode<JwtUserPayload>(token);
+    const payload = this.decode<JwtUserPayload>(token);
     return payload.exp;
   }
 
   async generate(payload: JwtUserBasicPayload) {
-    const newToken = await this.jwtService.signAsync(payload);
+    const newToken = await this.signAsync(payload);
     const expiresAt = this.getTokenExpiresAt(newToken);
 
     await this.limitUserRefreshTokens(payload.sub);

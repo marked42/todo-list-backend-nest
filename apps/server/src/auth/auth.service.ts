@@ -4,27 +4,18 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { UserService } from '@/user/user.service';
-import { User } from '@/user/entity/user.entity';
+import { AccessTokenService, RefreshTokenService } from '@/token';
+import { UserService, User } from '@/user';
 import { SignUpDto, SignInDto } from './dto';
 import { JwtUserBasicPayload, JwtUserPayload } from './interface';
-import {
-  AccessTokenJwtService,
-  RefreshTokenJwtService,
-  AccessTokenService,
-  RefreshTokenService,
-} from '@/token';
 import { InjectCurrentUser } from './current-user';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
-    private accessTokenJwtService: AccessTokenJwtService,
     private accessTokenService: AccessTokenService,
     private refreshTokenService: RefreshTokenService,
-    // TODO: should not expose refreshTokenJwtService
-    private refreshTokenJwtService: RefreshTokenJwtService,
     @InjectCurrentUser()
     private _currentUser: () => User,
   ) {}
@@ -55,7 +46,7 @@ export class AuthService {
     const payload = await this.getUserTokenPayload(user);
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.accessTokenJwtService.signAsync(payload),
+      this.accessTokenService.signAsync(payload),
       this.refreshTokenService.generate(payload),
     ]);
 
@@ -78,7 +69,7 @@ export class AuthService {
 
   async verifyRefreshToken(token: string) {
     const payload =
-      await this.refreshTokenJwtService.verifyAsync<JwtUserPayload>(token);
+      await this.refreshTokenService.verifyAsync<JwtUserPayload>(token);
 
     await Promise.all([
       this.verifyRefreshTokenVersion(payload),
@@ -201,14 +192,13 @@ export class AuthService {
 
   async signOut(accessToken: string) {
     try {
-      const payload =
-        await this.accessTokenJwtService.verifyAsync<JwtUserPayload>(
-          accessToken,
-          {
-            // sign out should work even if the access token is expired, so ignore expiration
-            ignoreExpiration: true,
-          },
-        );
+      const payload = await this.accessTokenService.verifyAsync<JwtUserPayload>(
+        accessToken,
+        {
+          // sign out should work even if the access token is expired, so ignore expiration
+          ignoreExpiration: true,
+        },
+      );
       const user = await this.userService.findUserById(payload.sub);
       if (!user) {
         throw new NotFoundException('User not found');
