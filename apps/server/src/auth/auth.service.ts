@@ -11,7 +11,7 @@ import { JwtUserBasicPayload, JwtUserPayload } from './interface';
 import {
   AccessTokenJwtService,
   RefreshTokenJwtService,
-  TokenBlacklistService,
+  AccessTokenService,
   RefreshTokenService,
 } from '@/token';
 import { InjectCurrentUser } from './current-user';
@@ -21,7 +21,7 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private accessTokenJwtService: AccessTokenJwtService,
-    private tokenBlacklistService: TokenBlacklistService,
+    private accessTokenService: AccessTokenService,
     private refreshTokenService: RefreshTokenService,
     // TODO: should not expose refreshTokenJwtService
     private refreshTokenJwtService: RefreshTokenJwtService,
@@ -215,7 +215,7 @@ export class AuthService {
       }
 
       // black list access token and leave refresh token intact
-      await this.tokenBlacklistService.addToBlacklist(accessToken, payload.exp);
+      await this.accessTokenService.addToBlacklist(accessToken, payload.exp);
       await this.userService.incrementTokenVersion(user.id);
 
       return 'Logged out successfully';

@@ -5,7 +5,7 @@ import { ConfigType } from '@nestjs/config';
 import {
   AccessTokenConfig,
   accessTokenExtractor,
-  TokenBlacklistService,
+  AccessTokenService,
 } from '@/token';
 import { JwtUserPayload } from '../interface';
 import { toJwtRequestUser } from '../util';
@@ -15,7 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     @Inject(AccessTokenConfig.KEY)
     private config: ConfigType<typeof AccessTokenConfig>,
-    private tokenBlacklistService: TokenBlacklistService, // Assuming you have a service to handle token blacklisting
+    private accessTokenService: AccessTokenService, // Assuming you have a service to handle token blacklisting
   ) {
     super({
       jwtFromRequest: accessTokenExtractor,
@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(request: Request, payload: JwtUserPayload) {
     const token = accessTokenExtractor(request)!;
     const isBlacklisted =
-      await this.tokenBlacklistService.isTokenBlacklisted(token);
+      await this.accessTokenService.isTokenBlacklisted(token);
     if (isBlacklisted) {
       throw new UnauthorizedException('Token is blacklisted');
     }

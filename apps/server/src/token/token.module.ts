@@ -7,7 +7,7 @@ import { AccessTokenConfig, RefreshTokenConfig } from './config';
 import {
   AccessTokenJwtService,
   RefreshTokenJwtService,
-  TokenBlacklistService,
+  AccessTokenService,
   RefreshTokenService,
 } from './service';
 
@@ -66,7 +66,7 @@ export class TokenModule {
       providers: [
         ...accessTokenProviders,
         ...refreshTokenProviders,
-        TokenBlacklistService,
+        AccessTokenService,
         RefreshTokenService,
       ],
       exports: [
@@ -75,7 +75,7 @@ export class TokenModule {
         RefreshTokenConfig.KEY,
         RefreshTokenJwtService,
         RefreshTokenService,
-        TokenBlacklistService,
+        AccessTokenService,
       ],
     };
   }
