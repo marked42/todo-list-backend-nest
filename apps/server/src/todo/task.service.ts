@@ -1,3 +1,4 @@
+import { In, Repository } from 'typeorm';
 import {
   BadRequestException,
   ForbiddenException,
@@ -6,18 +7,21 @@ import {
   Scope,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
 import { AuthService } from '@/auth';
-import { TaskList } from './entity/task-list.entity';
-import { Task } from './entity/task.entity';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
-import { CreateTaskListDto } from './dto/create-task-list.dto';
+import { UserService } from '@/user';
+import { TaskList, Task } from './entity';
+import {
+  CreateTaskDto,
+  UpdateTaskDto,
+  CreateTaskListDto,
+  RelativeReorderTaskDto,
+  ReorderTaskDto,
+  MoveTaskDto,
+  RelativeMoveTaskDto,
+  DEFAULT_TASK_ORDER,
+  QueryTaskDto,
+} from './dto';
 import { TaskMoveResult, TaskPosition } from './model';
-import { RelativeReorderTaskDto, ReorderTaskDto } from './dto/reorder-task.dto';
-import { MoveTaskDto, RelativeMoveTaskDto } from './dto/move-task.dto';
-import { DEFAULT_TASK_ORDER, QueryTaskDto } from './dto/query-task.dto';
-import { UserService } from '@/user/user.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TaskService {

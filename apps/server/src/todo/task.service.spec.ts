@@ -2,16 +2,17 @@ import { DataSource, Repository } from 'typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { User } from '@/user/entity/user.entity';
-import { TaskService } from './task.service';
-import { TaskList } from './entity/task-list.entity';
-import { Task } from './entity/task.entity';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
+import { User, UserService } from '@/user';
+import { AuthService } from '@/auth';
+import { TaskList, Task } from './entity';
 import {
+  CreateTaskDto,
+  UpdateTaskDto,
   AbsoluteReorderTaskDto,
   RelativeReorderTaskDto,
-} from './dto/reorder-task.dto';
+  MoveTaskDto,
+  QueryTaskDto,
+} from './dto';
 import {
   TaskListStatus,
   TaskMoveResult,
@@ -19,10 +20,7 @@ import {
   TaskPosition,
   TaskStatus,
 } from './model';
-import { MoveTaskDto } from './dto/move-task.dto';
-import { QueryTaskDto } from './dto/query-task.dto';
-import { UserService } from '@/user/user.service';
-import { AuthService } from '@/auth';
+import { TaskService } from './task.service';
 
 const getEntityId = (entity: { id: number }) => entity.id;
 

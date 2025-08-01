@@ -10,9 +10,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '@/auth';
 import { TaskService } from './task.service';
-import { CreateTaskListDto } from './dto/create-task-list.dto';
-import { JwtAuthGuard } from '@/auth/guard/auth-ignore-expiration.guard';
+import { CreateTaskListDto } from './dto';
 
 @Controller('/task-lists')
 @UseGuards(JwtAuthGuard)
