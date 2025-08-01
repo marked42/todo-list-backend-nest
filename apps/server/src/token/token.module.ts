@@ -8,7 +8,7 @@ import { RefreshTokenJwtService } from './refresh-token-jwt.service.ts';
 import { TokenBlacklistService } from './token-blacklist.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshTokenEntity } from './entity/refresh-token.entity';
-import { RefreshTokenRepository } from './repository/refresh-token.repository';
+import { RefreshTokenService } from './service/refresh-token.service';
 
 @Module({})
 export class TokenModule {
@@ -66,7 +66,7 @@ export class TokenModule {
         ...accessTokenProviders,
         ...refreshTokenProviders,
         TokenBlacklistService,
-        RefreshTokenRepository,
+        RefreshTokenService,
       ],
       exports: [
         AccessTokenJwtConfig.KEY,
@@ -74,7 +74,7 @@ export class TokenModule {
         RefreshTokenJwtConfig.KEY,
         RefreshTokenJwtService,
         TokenBlacklistService,
-        RefreshTokenRepository,
+        RefreshTokenService,
       ],
     };
   }

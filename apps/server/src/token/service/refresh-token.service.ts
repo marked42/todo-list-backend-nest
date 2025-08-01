@@ -10,7 +10,7 @@ export function secondsToDate(seconds: number) {
 export const MAX_REFRESH_TOKENS_PER_USER = 5;
 
 @Injectable()
-export class RefreshTokenRepository {
+export class RefreshTokenService {
   constructor(
     @InjectRepository(RefreshTokenEntity)
     private readonly refreshTokenRepository: Repository<RefreshTokenEntity>,
