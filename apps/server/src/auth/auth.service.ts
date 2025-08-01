@@ -7,7 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { UserService } from '@/user/user.service';
 import { User } from '@/user/entity/user.entity';
 import { SignUpDto, SignInDto } from './dto';
-import { JwtUserPayload } from './interface';
+import { JwtUserBasicPayload, JwtUserPayload } from './interface';
 import {
   AccessTokenJwtService,
   RefreshTokenJwtService,
@@ -20,9 +20,10 @@ import { InjectCurrentUser } from './current-user';
 export class AuthService {
   constructor(
     private userService: UserService,
-    private tokenBlacklistService: TokenBlacklistService,
-    private refreshTokenRepo: RefreshTokenService,
     private accessTokenJwtService: AccessTokenJwtService,
+    private tokenBlacklistService: TokenBlacklistService,
+    private refreshTokenService: RefreshTokenService,
+    // TODO: should not expose refreshTokenJwtService
     private refreshTokenJwtService: RefreshTokenJwtService,
     @InjectCurrentUser()
     private _currentUser: () => User,
@@ -51,9 +52,11 @@ export class AuthService {
   }
 
   private async generateTokens(user: User) {
+    const payload = await this.getUserTokenPayload(user);
+
     const [accessToken, refreshToken] = await Promise.all([
-      this.generateAccessToken(user),
-      this.generateRefreshToken(user),
+      this.accessTokenJwtService.signAsync(payload),
+      this.refreshTokenService.generate(payload),
     ]);
 
     return {
@@ -62,39 +65,15 @@ export class AuthService {
     };
   }
 
-  private getUserTokenPayload(user: User) {
-    return {
+  private async getUserTokenPayload(user: User) {
+    const payload: JwtUserBasicPayload = {
       sub: user.id,
       email: user.email,
-      device: this.getCurrentDeviceFingerprint(),
-      geoLocation: this.getCurrentGeoLocationFingerprint(),
-      version: this.getCurrentVersionFingerprint(),
+      device: await this.getCurrentDeviceFingerprint(),
+      geoLocation: await this.getCurrentGeoLocationFingerprint(),
+      version: await this.getCurrentVersionFingerprint(),
     };
-  }
-
-  private async generateAccessToken(user: User) {
-    const payload = this.getUserTokenPayload(user);
-
-    return this.accessTokenJwtService.signAsync(payload);
-  }
-
-  // TODO: refresh-token-repo move to token module
-  private async generateRefreshToken(user: User) {
-    const payload = this.getUserTokenPayload(user);
-
-    const refreshToken = await this.refreshTokenJwtService.signAsync(payload);
-
-    const refreshTokenPayload =
-      this.refreshTokenJwtService.decode<JwtUserPayload>(refreshToken);
-
-    await this.refreshTokenRepo.limitUserRefreshTokens(user.id);
-    await this.refreshTokenRepo.saveToken(
-      refreshToken,
-      user.id,
-      refreshTokenPayload.exp,
-    );
-
-    return refreshToken;
+    return payload;
   }
 
   async verifyRefreshToken(token: string) {
@@ -182,9 +161,9 @@ export class AuthService {
     try {
       const payload = await this.verifyRefreshToken(token);
 
-      const isRevoked = await this.refreshTokenRepo.isTokenRevoked(token);
+      const isRevoked = await this.refreshTokenService.isTokenRevoked(token);
       if (isRevoked) {
-        await this.refreshTokenRepo.revokeAllUserTokens(payload.sub);
+        await this.refreshTokenService.revokeAllUserTokens(payload.sub);
         throw new Error('Refresh token has been revoked');
       }
 
@@ -194,7 +173,7 @@ export class AuthService {
       }
 
       // refresh token rotation
-      await this.refreshTokenRepo.revokeToken(token);
+      await this.refreshTokenService.revokeToken(token);
 
       return this.generateTokens(user);
     } catch (_e) {
