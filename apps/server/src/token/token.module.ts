@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshTokenEntity } from './entity/refresh-token.entity';
 import { AccessTokenConfig, RefreshTokenConfig } from './config';
 import { AccessTokenService, RefreshTokenService } from './service';
+import { RedisCacheModule } from '@/redis';
 
 @Module({})
 export class TokenModule {
@@ -14,6 +15,7 @@ export class TokenModule {
         ConfigModule.forFeature(AccessTokenConfig),
         ConfigModule.forFeature(RefreshTokenConfig),
         TypeOrmModule.forFeature([RefreshTokenEntity]),
+        RedisCacheModule,
       ],
       providers: [
         {
