@@ -9,9 +9,10 @@ import {
 } from '@/token';
 import { JwtUserPayload } from '../interface';
 import { toJwtRequestUser } from '../util';
+import { JWT_STRATEGY } from '../constants';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY) {
   constructor(
     @Inject(AccessTokenConfig.KEY)
     private config: ConfigType<typeof AccessTokenConfig>,

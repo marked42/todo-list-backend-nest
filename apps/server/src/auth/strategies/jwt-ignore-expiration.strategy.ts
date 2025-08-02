@@ -5,11 +5,12 @@ import { ConfigType } from '@nestjs/config';
 import { AccessTokenConfig, accessTokenExtractor } from '@/token';
 import { JwtUserPayload } from '../interface';
 import { toJwtRequestUser } from '../util';
+import { JWT_IGNORE_EXPIRATION_STRATEGY } from '../constants';
 
 @Injectable()
 export class JwtIgnoreExpirationStrategy extends PassportStrategy(
   Strategy,
-  'jwt-ignore-expiration',
+  JWT_IGNORE_EXPIRATION_STRATEGY,
 ) {
   constructor(
     @Inject(AccessTokenConfig.KEY)
