@@ -1,41 +1,21 @@
 import * as crypto from 'node:crypto';
-import {
-  Inject,
-  Injectable,
-  OnApplicationBootstrap,
-  OnApplicationShutdown,
-} from '@nestjs/common';
-import { type Redis } from 'ioredis';
-import RedisMock from 'ioredis-mock';
+import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigType } from '@nestjs/config';
+import { type Redis } from 'ioredis';
+import { InjectRedis } from '@nestjs-modules/ioredis';
 import { AccessTokenConfig } from '../config';
 
 @Injectable()
-export class AccessTokenService
-  extends JwtService
-  implements OnApplicationBootstrap, OnApplicationShutdown
-{
-  private redisClient: Redis;
-
+export class AccessTokenService extends JwtService {
   constructor(
+    @InjectRedis()
+    private readonly redisClient: Redis,
+
     @Inject(AccessTokenConfig.KEY)
     private readonly accessTokenConfig: ConfigType<typeof AccessTokenConfig>,
   ) {
     super(accessTokenConfig.jwtModuleOptions);
-  }
-
-  // TODO: should be in a separate module
-  onApplicationBootstrap() {
-    // TODO: use a real Redis instance in production
-    this.redisClient = new RedisMock({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: 6379,
-    });
-  }
-
-  onApplicationShutdown(_signal?: string) {
-    return this.redisClient.quit();
   }
 
   async addToBlacklist(token: string, expireAt: number) {
