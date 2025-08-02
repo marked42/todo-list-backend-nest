@@ -81,31 +81,37 @@ export class AuthService {
   }
 
   async verifyRefreshTokenVersion(payload: JwtUserPayload) {
-    const currentFingerPrint = await this.getCurrentVersionFingerprint();
+    const passed = await this.verifyFingerprint(
+      this.getCurrentVersion(),
+      payload.version,
+    );
 
-    if (payload.version !== currentFingerPrint) {
+    if (!passed) {
       throw new UnauthorizedException('version mismatch');
     }
   }
 
   getCurrentVersion() {
-    return '1.0.0'; // This can be replaced with a dynamic version retrieval logic
+    return { version: '1.0.0' }; // This can be replaced with a dynamic version retrieval logic
   }
 
   getCurrentVersionFingerprint() {
     // This function can be used to get the current version of the application
     // For example, you can use a service to get the app version
     // Currently, it does nothing but can be implemented as needed
-    return bcrypt.hash(this.getCurrentVersion(), 10); // Example version, replace with actual logic if needed
+    return bcrypt.hash(JSON.stringify(this.getCurrentVersion()), 10); // Example version, replace with actual logic if needed
   }
 
   /**
    * verify geo location change
    */
   async verifyRefreshTokenGeoLocation(payload: JwtUserPayload) {
-    const currentFingerPrint = await this.getCurrentGeoLocationFingerprint();
+    const passed = await this.verifyFingerprint(
+      this.getCurrentGeoLocation(),
+      payload.geoLocation,
+    );
 
-    if (payload.geoLocation !== currentFingerPrint) {
+    if (!passed) {
       throw new UnauthorizedException('Geo location mismatch');
     }
   }
@@ -126,11 +132,17 @@ export class AuthService {
   }
 
   async verifyRefreshTokenDeviceFingerprint(payload: JwtUserPayload) {
-    const currentFingerPrint = await this.getCurrentDeviceFingerprint();
-
-    if (payload.device !== currentFingerPrint) {
+    const passed = await this.verifyFingerprint(
+      this.getCurrentDevice(),
+      payload.device,
+    );
+    if (!passed) {
       throw new UnauthorizedException('Device fingerprint mismatch');
     }
+  }
+
+  verifyFingerprint(data: Record<string, string>, fingerprint: string) {
+    return bcrypt.compare(JSON.stringify(data), fingerprint);
   }
 
   getCurrentDeviceFingerprint() {
